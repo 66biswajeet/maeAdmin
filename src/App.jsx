@@ -1,0 +1,153 @@
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+import AdminLayout from "./components/layout/AdminLayout";
+import VendorLayout from "./layouts/VendorLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import SiteSettingsPage from "./pages/SiteSettings";
+import ProfileSettings from "./pages/ProfileSettings";
+import MetaSettingsPage from "./pages/MetaSettings";
+import PlaceholderPage from "./pages/PlaceholderPage";
+import CategoriesPage from "./pages/CategoriesPage";
+import VendorsPage from "./pages/VendorsPage";
+import VendorRequestsPage from "./pages/VendorRequestsPage";
+import VendorRegisterPage from "./pages/VendorRegisterPage";
+import VendorLoginPage from "./pages/VendorLoginPage";
+import VendorDashboard from "./pages/vendor/VendorDashboard";
+import StaffPage from "./pages/StaffPage";
+import StaffRequestsPage from "./pages/StaffRequestsPage";
+
+import "./App.css";
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            fontFamily: "'DM Sans',sans-serif",
+            fontSize: "13px",
+            borderRadius: "8px",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+          },
+          success: {
+            style: {
+              background: "#0d2b1f",
+              color: "#4ade80",
+              border: "1px solid #166534",
+            },
+            iconTheme: { primary: "#4ade80", secondary: "#0d2b1f" },
+          },
+          error: {
+            style: {
+              background: "#2b0d0d",
+              color: "#f87171",
+              border: "1px solid #7f1d1d",
+            },
+            iconTheme: { primary: "#f87171", secondary: "#2b0d0d" },
+          },
+        }}
+      />
+      <Routes>
+        {/* Auth Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/vendor/login" element={<VendorLoginPage />} />
+        <Route path="/vendor/register" element={<VendorRegisterPage />} />
+
+        {/* Protected Vendor Routes */}
+        <Route element={<VendorLayout />}>
+          <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+          <Route
+            path="/vendor/products/all"
+            element={
+              <div className="page-content">
+                <h2>My Products</h2>
+                <p style={{ color: "#999" }}>Coming soon</p>
+              </div>
+            }
+          />
+          <Route
+            path="/vendor/products/add"
+            element={
+              <div className="page-content">
+                <h2>Add Product</h2>
+                <p style={{ color: "#999" }}>Coming soon</p>
+              </div>
+            }
+          />
+          <Route
+            path="/vendor/orders"
+            element={
+              <div className="page-content">
+                <h2>My Orders</h2>
+                <p style={{ color: "#999" }}>Coming soon</p>
+              </div>
+            }
+          />
+          <Route
+            path="/vendor/reviews"
+            element={
+              <div className="page-content">
+                <h2>Reviews</h2>
+                <p style={{ color: "#999" }}>Coming soon</p>
+              </div>
+            }
+          />
+          <Route
+            path="/vendor/analytics"
+            element={
+              <div className="page-content">
+                <h2>Analytics</h2>
+                <p style={{ color: "#999" }}>Coming soon</p>
+              </div>
+            }
+          />
+          <Route
+            path="/vendor/profile"
+            element={
+              <div className="page-content">
+                <h2>My Profile</h2>
+                <p style={{ color: "#999" }}>Coming soon</p>
+              </div>
+            }
+          />
+        </Route>
+
+        {/* Protected Admin Routes */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="/settings/site" replace />} />
+          <Route path="dashboard" element={<PlaceholderPage />} />
+          <Route path="catalog/categories" element={<CategoriesPage />} />
+          <Route path="vendors/all" element={<VendorsPage />} />
+          <Route path="vendors/requests" element={<VendorRequestsPage />} />
+          <Route path="vendors" element={<VendorsPage />} />
+          <Route path="staff/all" element={<StaffPage />} />
+          <Route path="staff/requests" element={<StaffRequestsPage />} />
+          <Route path="staff" element={<StaffPage />} />
+          <Route path="products/all" element={<PlaceholderPage />} />
+          <Route path="products/requests" element={<PlaceholderPage />} />
+          <Route path="products/tags" element={<PlaceholderPage />} />
+          <Route path="products/attributes" element={<PlaceholderPage />} />
+          <Route path="products/reviews" element={<PlaceholderPage />} />
+          <Route path="customers/all" element={<PlaceholderPage />} />
+          <Route path="customers/support" element={<PlaceholderPage />} />
+          <Route path="orders" element={<PlaceholderPage />} />
+          <Route path="settings/site" element={<SiteSettingsPage />} />
+          <Route path="settings/meta" element={<MetaSettingsPage />} />
+          <Route path="settings/profile" element={<ProfileSettings />} />
+          <Route path="*" element={<Navigate to="/settings/site" replace />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}
