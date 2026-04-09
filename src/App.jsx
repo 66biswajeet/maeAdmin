@@ -10,13 +10,21 @@ import ProfileSettings from "./pages/ProfileSettings";
 import MetaSettingsPage from "./pages/MetaSettings";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import CategoriesPage from "./pages/CategoriesPage";
+import CitiesPage from "./pages/CitiesPage";
+import PlansPage from "./pages/PlansPage";
 import VendorsPage from "./pages/VendorsPage";
 import VendorRequestsPage from "./pages/VendorRequestsPage";
 import VendorRegisterPage from "./pages/VendorRegisterPage";
 import VendorLoginPage from "./pages/VendorLoginPage";
 import VendorDashboard from "./pages/vendor/VendorDashboard";
+import VendorProductsPage from "./pages/vendor/VendorProductsPage";
+import VendorAddProductPage from "./pages/vendor/VendorAddProductPage";
+import VendorProductDetailPage from "./pages/vendor/VendorProductDetailPage";
 import StaffPage from "./pages/StaffPage";
 import StaffRequestsPage from "./pages/StaffRequestsPage";
+import AdminProductRequestsPage from "./pages/AdminProductRequestsPage";
+import AdminAllProductsPage from "./pages/AdminAllProductsPage";
+import AdminEditProductPage from "./pages/AdminEditProductPage";
 
 import "./App.css";
 
@@ -60,23 +68,14 @@ export default function App() {
         {/* Protected Vendor Routes */}
         <Route element={<VendorLayout />}>
           <Route path="/vendor/dashboard" element={<VendorDashboard />} />
-          <Route
-            path="/vendor/products/all"
-            element={
-              <div className="page-content">
-                <h2>My Products</h2>
-                <p style={{ color: "#999" }}>Coming soon</p>
-              </div>
-            }
-          />
+          <Route path="/vendor/products/all" element={<VendorProductsPage />} />
           <Route
             path="/vendor/products/add"
-            element={
-              <div className="page-content">
-                <h2>Add Product</h2>
-                <p style={{ color: "#999" }}>Coming soon</p>
-              </div>
-            }
+            element={<VendorAddProductPage />}
+          />
+          <Route
+            path="/vendor/products/:id"
+            element={<VendorProductDetailPage />}
           />
           <Route
             path="/vendor/orders"
@@ -128,14 +127,23 @@ export default function App() {
           <Route index element={<Navigate to="/settings/site" replace />} />
           <Route path="dashboard" element={<PlaceholderPage />} />
           <Route path="catalog/categories" element={<CategoriesPage />} />
+          <Route path="catalog/cities" element={<CitiesPage />} />
+          <Route path="catalog/plans" element={<PlansPage />} />
           <Route path="vendors/all" element={<VendorsPage />} />
           <Route path="vendors/requests" element={<VendorRequestsPage />} />
           <Route path="vendors" element={<VendorsPage />} />
           <Route path="staff/all" element={<StaffPage />} />
           <Route path="staff/requests" element={<StaffRequestsPage />} />
           <Route path="staff" element={<StaffPage />} />
-          <Route path="products/all" element={<PlaceholderPage />} />
-          <Route path="products/requests" element={<PlaceholderPage />} />
+          <Route path="products/all" element={<AdminAllProductsPage />} />
+          <Route
+            path="products/edit/:productId"
+            element={<AdminEditProductPage />}
+          />
+          <Route
+            path="products/requests"
+            element={<AdminProductRequestsPage />}
+          />
           <Route path="products/tags" element={<PlaceholderPage />} />
           <Route path="products/attributes" element={<PlaceholderPage />} />
           <Route path="products/reviews" element={<PlaceholderPage />} />

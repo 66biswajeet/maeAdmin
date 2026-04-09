@@ -82,4 +82,16 @@ export const updateCategory = (id, data) =>
   API.patch(`/categories/${id}`, data);
 export const deleteCategory = (id) => API.delete(`/categories/${id}`);
 
+// ── Cities ──────────────────────────────────────────────────────────────────
+export const getCities = () => API.get("/cities");
+export const createCity = (data) => API.post("/cities", data);
+export const updateCity = (id, data) => API.patch(`/cities/${id}`, data);
+export const deleteCity = (id) => API.delete(`/cities/${id}`);
+
+// ── Plans ───────────────────────────────────────────────────────────────────
+export const getPlans = () => API.get("/plans");
+export const createPlan = (data) => API.post("/plans", data);
+export const updatePlan = (id, data) => API.patch(`/plans/${id}`, data);
+export const deletePlan = (id) => API.delete(`/plans/${id}`);
+
 export default API;

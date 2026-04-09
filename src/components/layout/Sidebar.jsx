@@ -14,6 +14,7 @@ import {
   LogOut,
   User,
   UserCog,
+  ChevronsUp,
 } from "lucide-react";
 
 const navItems = [
@@ -42,9 +43,8 @@ const navItems = [
     path: "/catalog",
     children: [
       { label: "Categories", path: "/catalog/categories" },
-      { label: "Products", path: "/catalog/products" },
-      { label: "Tags", path: "/catalog/tags" },
-      { label: "Attributes", path: "/catalog/attributes" },
+      { label: "Cities", path: "/catalog/cities" },
+      { label: "Plans", path: "/catalog/plans" },
     ],
   },
   {
@@ -98,12 +98,30 @@ export default function Sidebar() {
   const toggle = (label) =>
     setExpanded((prev) => ({ ...prev, [label]: !prev[label] }));
 
+  const collapseAll = () => {
+    setExpanded({
+      Products: false,
+      Settings: false,
+      Catalog: false,
+      Vendors: false,
+      Staff: false,
+      Customers: false,
+    });
+  };
+
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
         <div className="brand">
           ADMIN <span>PANEL</span>
         </div>
+        <button
+          className="collapse-all-btn"
+          onClick={collapseAll}
+          title="Collapse all items"
+        >
+          <ChevronsUp size={16} />
+        </button>
       </div>
 
       <nav className="sidebar-nav">

@@ -93,17 +93,48 @@ a {
   padding: 16px 18px;
   border-bottom: 1px solid #dce8ff;
   background: #1e3b86;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 .sidebar-logo .brand {
   font-family: sans-serif;
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 800;
   color: #fff;
   letter-spacing: 1.8px;
   text-transform: uppercase;
+  flex: 1;
 }
 .sidebar-logo .brand span {
   color: #4fd2d0;
+}
+.collapse-all-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(79, 210, 208, 0.15);
+  border: 1px solid rgba(79, 210, 208, 0.3);
+  border-radius: 6px;
+  color: #4fd2d0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.collapse-all-btn:hover {
+  background: rgba(79, 210, 208, 0.25);
+  border-color: rgba(79, 210, 208, 0.5);
+  transform: translateY(-2px);
+}
+.collapse-all-btn:active {
+  transform: translateY(0);
+}
+.collapse-all-btn svg {
+  width: 16px;
+  height: 16px;
 }
 .sidebar-lbl {
   font-size: 9.5px;
