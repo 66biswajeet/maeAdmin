@@ -45,6 +45,7 @@ const navItems = [
       { label: "Categories", path: "/catalog/categories" },
       { label: "Cities", path: "/catalog/cities" },
       { label: "Plans", path: "/catalog/plans" },
+      { label: "Empanelments", path: "/catalog/empanelments" },
     ],
   },
   {

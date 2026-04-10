@@ -8,6 +8,7 @@ import {
   ChevronRight,
   LogOut,
   BarChart3,
+  User,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -17,6 +18,11 @@ const navItems = [
     icon: LayoutDashboard,
     label: "Dashboard",
     path: "/vendor/dashboard",
+  },
+  {
+    icon: User,
+    label: "My Profile",
+    path: "/vendor/profile",
   },
   {
     icon: Package,

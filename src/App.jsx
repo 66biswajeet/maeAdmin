@@ -12,6 +12,7 @@ import PlaceholderPage from "./pages/PlaceholderPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import CitiesPage from "./pages/CitiesPage";
 import PlansPage from "./pages/PlansPage";
+import EmpanelmentPage from "./pages/EmpanelmentPage";
 import VendorsPage from "./pages/VendorsPage";
 import VendorRequestsPage from "./pages/VendorRequestsPage";
 import VendorRegisterPage from "./pages/VendorRegisterPage";
@@ -20,6 +21,7 @@ import VendorDashboard from "./pages/vendor/VendorDashboard";
 import VendorProductsPage from "./pages/vendor/VendorProductsPage";
 import VendorAddProductPage from "./pages/vendor/VendorAddProductPage";
 import VendorProductDetailPage from "./pages/vendor/VendorProductDetailPage";
+import VendorProfilePage from "./pages/vendor/VendorProfilePage";
 import StaffPage from "./pages/StaffPage";
 import StaffRequestsPage from "./pages/StaffRequestsPage";
 import AdminProductRequestsPage from "./pages/AdminProductRequestsPage";
@@ -104,15 +106,7 @@ export default function App() {
               </div>
             }
           />
-          <Route
-            path="/vendor/profile"
-            element={
-              <div className="page-content">
-                <h2>My Profile</h2>
-                <p style={{ color: "#999" }}>Coming soon</p>
-              </div>
-            }
-          />
+          <Route path="/vendor/profile" element={<VendorProfilePage />} />
         </Route>
 
         {/* Protected Admin Routes */}
@@ -129,6 +123,7 @@ export default function App() {
           <Route path="catalog/categories" element={<CategoriesPage />} />
           <Route path="catalog/cities" element={<CitiesPage />} />
           <Route path="catalog/plans" element={<PlansPage />} />
+          <Route path="catalog/empanelments" element={<EmpanelmentPage />} />
           <Route path="vendors/all" element={<VendorsPage />} />
           <Route path="vendors/requests" element={<VendorRequestsPage />} />
           <Route path="vendors" element={<VendorsPage />} />

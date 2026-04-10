@@ -5,7 +5,11 @@ const API = axios.create({
 });
 
 API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  // Check for admin token first, then vendor token
+  const adminToken = localStorage.getItem("token");
+  const vendorToken = localStorage.getItem("vendorToken");
+  const token = adminToken || vendorToken;
+
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -23,6 +27,17 @@ export const vendorLogin = (data) => API.post("/vendors/login", data);
 export const vendorRegister = (data) => API.post("/vendors/register", data);
 export const vendorLogout = () => API.post("/vendors/logout");
 export const getVendorMe = () => API.get("/vendors/me");
+export const updateVendorMe = (formData) =>
+  API.patch("/vendors/update-me", formData);
+
+// Vendor Edit Requests
+export const createVendorEditRequest = (data) =>
+  API.post("/vendor-edit-requests", data);
+export const getVendorEditRequests = () => API.get("/vendor-edit-requests");
+export const approveVendorEditRequest = (id) =>
+  API.patch(`/vendor-edit-requests/${id}/approve`);
+export const rejectVendorEditRequest = (id, data) =>
+  API.patch(`/vendor-edit-requests/${id}/reject`, data);
 
 // Site Settings
 export const getSiteSettings = () => API.get("/site-settings");
@@ -93,5 +108,12 @@ export const getPlans = () => API.get("/plans");
 export const createPlan = (data) => API.post("/plans", data);
 export const updatePlan = (id, data) => API.patch(`/plans/${id}`, data);
 export const deletePlan = (id) => API.delete(`/plans/${id}`);
+
+// ── Empanelments ────────────────────────────────────────────────────────────
+export const getEmpanelments = () => API.get("/empanelments");
+export const createEmpanelment = (data) => API.post("/empanelments", data);
+export const updateEmpanelment = (id, data) =>
+  API.patch(`/empanelments/${id}`, data);
+export const deleteEmpanelment = (id) => API.delete(`/empanelments/${id}`);
 
 export default API;
