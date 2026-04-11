@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "axios";
+import RichTextEditor from "../../components/RichTextEditor";
 import "./VendorProductDetailPage.css";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
@@ -315,7 +316,12 @@ export default function VendorProductDetailPage() {
 
           <div className="detail-card">
             <h3>Description</h3>
-            <p>{product.description || "—"}</p>
+            <div
+              className="description-content"
+              dangerouslySetInnerHTML={{
+                __html: product.description || "—",
+              }}
+            />
           </div>
 
           <div className="detail-card">
@@ -411,12 +417,12 @@ export default function VendorProductDetailPage() {
 
               <div className="form-group">
                 <label>Description</label>
-                <textarea
-                  name="description"
+                <RichTextEditor
                   value={form.description}
-                  onChange={handleChange}
+                  onChange={(html) =>
+                    setForm((prev) => ({ ...prev, description: html }))
+                  }
                   placeholder="Describe your product..."
-                  rows="4"
                 />
               </div>
 

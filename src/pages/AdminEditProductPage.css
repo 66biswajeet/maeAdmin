@@ -755,3 +755,68 @@
     transform: translateY(0);
   }
 }
+
+/* HTML Content Rendering - TipTap Editor Output */
+.description-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.description-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.description-content table td,
+.description-content table th {
+  border: 1px solid #d1d5db;
+  padding: 12px 10px;
+  text-align: left;
+  vertical-align: middle;
+  font-size: 13px;
+}
+
+.description-content table th {
+  background-color: #f3f4f6;
+  color: #1f2937;
+  font-weight: 600;
+  border-color: #9ca3af;
+}
+
+.description-content table tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+.description-content table tr:hover {
+  background-color: #f3f4f6;
+}
+
+.description-content table p {
+  margin: 0;
+  padding: 0;
+}
+
+.description-content h1,
+.description-content h2,
+.description-content h3,
+.description-content h4,
+.description-content h5,
+.description-content h6 {
+  margin: 12px 0 8px 0;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.description-content ul,
+.description-content ol {
+  margin: 12px 0;
+  padding-left: 24px;
+}
+
+.description-content li {
+  margin-bottom: 6px;
+}

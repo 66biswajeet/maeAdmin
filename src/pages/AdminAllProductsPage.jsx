@@ -482,7 +482,12 @@ export default function AdminAllProductsPage() {
 
               <div className="description-section">
                 <label>Full Description</label>
-                <p>{selectedProduct.description || "—"}</p>
+                <div
+                  className="description-content"
+                  dangerouslySetInnerHTML={{
+                    __html: selectedProduct.description || "—",
+                  }}
+                />
               </div>
 
               {/* VARIANTS SECTION */}

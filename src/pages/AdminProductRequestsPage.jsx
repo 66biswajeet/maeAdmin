@@ -315,7 +315,12 @@ export default function AdminProductRequestsPage() {
 
               <div className="description-section">
                 <label>Description</label>
-                <p>{selectedProduct.description}</p>
+                <div
+                  className="description-content"
+                  dangerouslySetInnerHTML={{
+                    __html: selectedProduct.description || "",
+                  }}
+                />
               </div>
 
               <div className="modal-actions">

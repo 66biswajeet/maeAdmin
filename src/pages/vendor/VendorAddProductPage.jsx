@@ -483,6 +483,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "axios";
+import RichTextEditor from "../../components/RichTextEditor";
 import "./VendorAddProductPage.css";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
@@ -794,12 +795,12 @@ export default function VendorAddProductPage() {
 
             <div className="form-group">
               <label>Full Description</label>
-              <textarea
-                name="description"
+              <RichTextEditor
                 value={form.description}
-                onChange={handleChange}
+                onChange={(html) =>
+                  setForm((prev) => ({ ...prev, description: html }))
+                }
                 placeholder="Describe features, benefits, specifications…"
-                rows="4"
               />
             </div>
           </div>

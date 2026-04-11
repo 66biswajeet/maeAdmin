@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Upload, Plus, Trash2, DollarSign } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "axios";
+import RichTextEditor from "../components/RichTextEditor";
 import "./AdminEditProductPage.css";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
@@ -517,11 +518,12 @@ export default function AdminEditProductPage() {
 
           <div className="form-group">
             <label>Full Description</label>
-            <textarea
-              name="description"
+            <RichTextEditor
               value={formData.description}
-              onChange={handleChange}
-              rows="4"
+              onChange={(html) =>
+                setFormData((prev) => ({ ...prev, description: html }))
+              }
+              placeholder="Describe your product features, benefits, specifications…"
             />
           </div>
         </section>
