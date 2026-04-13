@@ -266,7 +266,7 @@ export default function AdminProductRequestsPage() {
                       <table>
                         <thead>
                           <tr>
-                            <th>City</th>
+                            <th>Zone</th>
                             <th>Plan</th>
                             <th>Regular Price</th>
                             <th>Sale Price</th>
@@ -274,39 +274,47 @@ export default function AdminProductRequestsPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {selectedProduct.variants.map((variant, idx) => (
-                            <tr key={idx}>
-                              <td>
-                                {typeof variant.city === "object"
-                                  ? variant.city?.name
-                                  : "—"}
-                              </td>
-                              <td>
-                                {typeof variant.plan === "object"
-                                  ? variant.plan?.name
-                                  : "—"}
-                              </td>
-                              <td className="price-cell">
-                                ₹{Number(variant.price || 0).toFixed(2)}
-                              </td>
-                              <td className="price-cell">
-                                ₹{Number(variant.salePrice || 0).toFixed(2)}
-                              </td>
-                              <td>
-                                <span
-                                  className={
-                                    variant.isAvailable
-                                      ? "badge-available"
-                                      : "badge-unavailable"
-                                  }
-                                >
-                                  {variant.isAvailable
-                                    ? "Available"
-                                    : "Not Available"}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
+                          {selectedProduct.variants.map((variant, idx) => {
+                            // Zone mapping
+                            const ZONE_MAP = {
+                              basecity: `📍 Your Base City (${selectedProduct.vendor?.baseCity || "—"})`,
+                              north: "🔵 North Zone",
+                              south: "🔵 South Zone",
+                              east: "🔵 East Zone",
+                              west: "🔵 West Zone",
+                            };
+                            const zoneName =
+                              ZONE_MAP[variant.zone] || variant.zone;
+                            return (
+                              <tr key={idx}>
+                                <td>{zoneName}</td>
+                                <td>
+                                  {typeof variant.plan === "object"
+                                    ? variant.plan?.name
+                                    : "—"}
+                                </td>
+                                <td className="price-cell">
+                                  ₹{Number(variant.price || 0).toFixed(2)}
+                                </td>
+                                <td className="price-cell">
+                                  ₹{Number(variant.salePrice || 0).toFixed(2)}
+                                </td>
+                                <td>
+                                  <span
+                                    className={
+                                      variant.isAvailable
+                                        ? "badge-available"
+                                        : "badge-unavailable"
+                                    }
+                                  >
+                                    {variant.isAvailable
+                                      ? "Available"
+                                      : "Not Available"}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>

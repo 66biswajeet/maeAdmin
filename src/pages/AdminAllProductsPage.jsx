@@ -500,7 +500,7 @@ export default function AdminAllProductsPage() {
                   <table className="variants-detail-table">
                     <thead>
                       <tr>
-                        <th>City</th>
+                        <th>Zone</th>
                         <th>Plan</th>
                         <th>Price</th>
                         <th>Sale Price</th>
@@ -509,15 +509,21 @@ export default function AdminAllProductsPage() {
                     </thead>
                     <tbody>
                       {selectedProduct.variants.map((variant, idx) => {
-                        const cityName =
-                          cities.find((c) => c._id === variant.city)?.name ||
-                          "—";
+                        // Zone options mapping
+                        const ZONE_MAP = {
+                          basecity: "📍 Your Base City",
+                          north: "🔵 North Zone",
+                          south: "🔵 South Zone",
+                          east: "🔵 East Zone",
+                          west: "🔵 West Zone",
+                        };
+                        const zoneName = ZONE_MAP[variant.zone] || variant.zone;
                         const planName =
                           plans.find((p) => p._id === variant.plan)?.name ||
                           "—";
                         return (
                           <tr key={idx}>
-                            <td>{cityName}</td>
+                            <td>{zoneName}</td>
                             <td>{planName}</td>
                             <td>₹{variant.price.toFixed(2)}</td>
                             <td>

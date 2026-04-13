@@ -11,6 +11,7 @@ import {
   ArrowRight,
   Eye,
   EyeOff,
+  MapPin,
 } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -35,6 +36,7 @@ export default function VendorRegisterPage() {
     confirmPassword: "",
     companyName: "",
     phone: "",
+    baseCity: "",
   });
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -114,6 +116,10 @@ export default function VendorRegisterPage() {
       setError("Company name is required");
       return;
     }
+    if (!form.baseCity.trim()) {
+      setError("Base city/office location is required");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
@@ -123,6 +129,7 @@ export default function VendorRegisterPage() {
         password: form.password,
         companyName: form.companyName,
         phone: form.phone,
+        baseCity: form.baseCity,
       });
       setSuccess(true);
     } catch (err) {
@@ -317,6 +324,18 @@ export default function VendorRegisterPage() {
                     placeholder="+91 98765 43210"
                     value={form.phone}
                     onChange={(e) => set("phone", e.target.value)}
+                  />
+                </div>
+                <div className="vr-fg">
+                  <label>
+                    <MapPin size={13} /> Base City / Office Location{" "}
+                    <span>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g., Mumbai, Delhi, Bangalore"
+                    value={form.baseCity}
+                    onChange={(e) => set("baseCity", e.target.value)}
                   />
                 </div>
                 <div className="vr-notice">

@@ -8,6 +8,7 @@ const EMPTY_FORM = {
   name: "",
   description: "",
   duration: "",
+  sequence: 0,
 };
 
 export default function PlansPage() {
@@ -55,6 +56,7 @@ export default function PlansPage() {
       name: plan.name,
       description: plan.description || "",
       duration: plan.duration || "",
+      sequence: plan.sequence || 0,
     });
     setShowModal(true);
   };
@@ -143,6 +145,7 @@ export default function PlansPage() {
           <table className="data-table">
             <thead>
               <tr>
+                <th>Sequence</th>
                 <th>Plan Name</th>
                 <th>Description</th>
                 <th>Duration</th>
@@ -152,6 +155,9 @@ export default function PlansPage() {
             <tbody>
               {filtered.map((plan) => (
                 <tr key={plan._id}>
+                  <td>
+                    <span className="sequence-badge">{plan.sequence || 0}</span>
+                  </td>
                   <td>
                     <div className="plan-name">
                       <Layers size={16} />
@@ -196,6 +202,17 @@ export default function PlansPage() {
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
               />
+            </div>
+
+            <div className="form-group">
+              <label>Sequence / Order</label>
+              <input
+                type="number"
+                placeholder="0"
+                value={form.sequence}
+                onChange={(e) => set("sequence", parseInt(e.target.value) || 0)}
+              />
+              <small>Lower numbers appear first in the list</small>
             </div>
 
             <div className="form-group">

@@ -4,10 +4,8 @@ import {
   LayoutDashboard,
   Package,
   ShoppingCart,
-  Star,
   ChevronRight,
   LogOut,
-  BarChart3,
   User,
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -37,16 +35,6 @@ const navItems = [
     icon: ShoppingCart,
     label: "My Orders",
     path: "/vendor/orders",
-  },
-  {
-    icon: Star,
-    label: "Reviews",
-    path: "/vendor/reviews",
-  },
-  {
-    icon: BarChart3,
-    label: "Analytics",
-    path: "/vendor/analytics",
   },
 ];
 

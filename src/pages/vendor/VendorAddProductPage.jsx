@@ -492,11 +492,10 @@ export default function VendorAddProductPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
-  const [cities, setCities] = useState([]);
   const [plans, setPlans] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [citiesLoading, setCitiesLoading] = useState(true);
   const [plansLoading, setPlansLoading] = useState(true);
+  const [vendorData, setVendorData] = useState(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -509,7 +508,7 @@ export default function VendorAddProductPage() {
   });
 
   const [currentVariant, setCurrentVariant] = useState({
-    city: "",
+    zone: "",
     plan: "",
     price: "",
     salePrice: "",
@@ -520,30 +519,52 @@ export default function VendorAddProductPage() {
 
   const token = localStorage.getItem("vendorToken");
 
+  // Zone options
+  const ZONE_OPTIONS = [
+    { value: "basecity", label: "📍 Your Base City" },
+    { value: "north", label: "🔵 North Zone" },
+    { value: "south", label: "🔵 South Zone" },
+    { value: "east", label: "🔵 East Zone" },
+    { value: "west", label: "🔵 West Zone" },
+    { value: "virtual", label: "🌐 Virtual" },
+  ];
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [categoriesRes, citiesRes, plansRes] = await Promise.all([
+        const [categoriesRes, plansRes, vendorRes] = await Promise.all([
           axios.get(`${API_BASE}/categories`),
-          axios.get(`${API_BASE}/cities`),
           axios.get(`${API_BASE}/plans`),
+          axios.get(`${API_BASE}/vendors/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
         setCategories(
           categoriesRes.data.categories || categoriesRes.data || [],
         );
-        setCities(citiesRes.data.cities || citiesRes.data || []);
         setPlans(plansRes.data.plans || plansRes.data || []);
+        setVendorData(vendorRes.data);
       } catch (err) {
         toast.error("Failed to load form data");
         console.error(err);
       } finally {
         setCategoriesLoading(false);
-        setCitiesLoading(false);
         setPlansLoading(false);
       }
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (plans.length > 0 && !currentVariant.plan) {
+      const firstPlan = plans[0];
+      setCurrentVariant((prev) => ({
+        ...prev,
+        plan: firstPlan._id,
+        zone: firstPlan.name?.toLowerCase() === "base" ? "virtual" : prev.zone,
+      }));
+    }
+  }, [plans]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -581,22 +602,36 @@ export default function VendorAddProductPage() {
 
   const handleVariantChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setCurrentVariant((prev) => ({
-      ...prev,
+    let updatedVariant = {
+      ...currentVariant,
       [name]: type === "checkbox" ? checked : value,
-    }));
+    };
+
+    // Auto-set zone to "virtual" when plan is "base"
+    if (name === "plan") {
+      const selectedPlan = plans.find((p) => p._id === value);
+      if (
+        selectedPlan &&
+        selectedPlan.name &&
+        selectedPlan.name.toLowerCase() === "base"
+      ) {
+        updatedVariant.zone = "virtual";
+      }
+    }
+
+    setCurrentVariant(updatedVariant);
   };
 
   const addVariant = () => {
-    if (!currentVariant.city || !currentVariant.plan || !currentVariant.price) {
-      toast.error("Please select city, plan, and enter a price");
+    if (!currentVariant.zone || !currentVariant.plan || !currentVariant.price) {
+      toast.error("Please select zone, plan, and enter a price");
       return;
     }
     const exists = form.variants.some(
-      (v) => v.city === currentVariant.city && v.plan === currentVariant.plan,
+      (v) => v.zone === currentVariant.zone && v.plan === currentVariant.plan,
     );
     if (exists) {
-      toast.error("This city–plan combination already exists");
+      toast.error("This zone–plan combination already exists");
       return;
     }
     setForm((prev) => ({
@@ -604,16 +639,20 @@ export default function VendorAddProductPage() {
       variants: [
         ...prev.variants,
         {
-          ...currentVariant,
+          zone: currentVariant.zone,
+          city:
+            currentVariant.zone === "basecity" ? vendorData?.baseCity : null,
+          plan: currentVariant.plan,
           price: parseFloat(currentVariant.price),
           salePrice: currentVariant.salePrice
             ? parseFloat(currentVariant.salePrice)
             : null,
+          isAvailable: currentVariant.isAvailable,
         },
       ],
     }));
     setCurrentVariant({
-      city: "",
+      zone: "",
       plan: "",
       price: "",
       salePrice: "",
@@ -655,7 +694,7 @@ export default function VendorAddProductPage() {
       return;
     }
     if (form.variants.length === 0) {
-      toast.error("Add at least one city–plan variant");
+      toast.error("Add at least one zone–plan variant");
       return;
     }
     setLoading(true);
@@ -968,7 +1007,7 @@ export default function VendorAddProductPage() {
             </div>
             <div>
               <p className="section-title">
-                City & Plan Variants
+                Zone & Plan Variants
                 {form.variants.length > 0 && (
                   <span className="variants-count-badge">
                     {form.variants.length}
@@ -976,7 +1015,7 @@ export default function VendorAddProductPage() {
                 )}
               </p>
               <p className="section-subtitle">
-                Set pricing per city and subscription plan
+                Set pricing per zone and subscription plan
               </p>
             </div>
           </div>
@@ -1007,29 +1046,20 @@ export default function VendorAddProductPage() {
                 </div>
                 <div className="form-group">
                   <label>
-                    City <span className="label-required">*</span>
+                    Zone <span className="label-required">*</span>
                   </label>
                   <select
-                    name="city"
-                    value={currentVariant.city}
+                    name="zone"
+                    value={currentVariant.zone}
                     onChange={handleVariantChange}
-                    disabled={(() => {
-                      const selectedPlan = plans.find(
-                        (p) => p._id === currentVariant.plan,
-                      );
-                      return selectedPlan?.name?.toLowerCase() === "base";
-                    })()}
+                    disabled={!currentVariant.plan}
                   >
-                    <option value="">Select city</option>
-                    {citiesLoading ? (
-                      <option disabled>Loading…</option>
-                    ) : (
-                      cities.map((city) => (
-                        <option key={city._id} value={city._id}>
-                          {city.name}
-                        </option>
-                      ))
-                    )}
+                    <option value="">Select zone</option>
+                    {ZONE_OPTIONS.map((zone) => (
+                      <option key={zone.value} value={zone.value}>
+                        {zone.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -1094,7 +1124,7 @@ export default function VendorAddProductPage() {
             {form.variants.length > 0 ? (
               <div className="variants-list">
                 <div className="variants-list-header">
-                  <span>City</span>
+                  <span>Zone</span>
                   <span>Plan</span>
                   <span>Price</span>
                   <span>Sale</span>
@@ -1102,14 +1132,15 @@ export default function VendorAddProductPage() {
                   <span></span>
                 </div>
                 {form.variants.map((variant, index) => {
-                  const cityName =
-                    cities.find((c) => c._id === variant.city)?.name || "—";
+                  const zoneName =
+                    ZONE_OPTIONS.find((z) => z.value === variant.zone)?.label ||
+                    "—";
                   const planName =
                     plans.find((p) => p._id === variant.plan)?.name || "—";
                   return (
                     <div className="variant-row" key={index}>
                       <div className="variant-cell">
-                        <span className="variant-city-tag">{cityName}</span>
+                        <span className="variant-city-tag">{zoneName}</span>
                       </div>
                       <div className="variant-cell">
                         <span className="variant-plan-chip">{planName}</span>

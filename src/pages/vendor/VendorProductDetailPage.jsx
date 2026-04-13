@@ -38,7 +38,7 @@ export default function VendorProductDetailPage() {
   });
 
   const [currentVariant, setCurrentVariant] = useState({
-    city: "",
+    zone: "",
     plan: "",
     price: "",
     salePrice: "",
@@ -46,6 +46,16 @@ export default function VendorProductDetailPage() {
   });
 
   const [expandedCategories, setExpandedCategories] = useState(new Set());
+
+  // Zone options
+  const ZONE_OPTIONS = [
+    { value: "basecity", label: "📍 Your Base City" },
+    { value: "north", label: "🔵 North Zone" },
+    { value: "south", label: "🔵 South Zone" },
+    { value: "east", label: "🔵 East Zone" },
+    { value: "west", label: "🔵 West Zone" },
+    { value: "virtual", label: "🌐 Virtual" },
+  ];
 
   // Fetch product details and form data
   useEffect(() => {
@@ -87,6 +97,22 @@ export default function VendorProductDetailPage() {
     fetchData();
   }, [id]);
 
+  // Pre-select first plan when plans are loaded
+  useEffect(() => {
+    if (plans.length > 0 && !currentVariant.plan) {
+      const firstPlan = plans[0];
+      setCurrentVariant((prev) => ({
+        ...prev,
+        plan: firstPlan._id,
+        // Auto-set zone to "virtual" if first plan is "base"
+        zone:
+          firstPlan.name && firstPlan.name.toLowerCase() === "base"
+            ? "virtual"
+            : prev.zone,
+      }));
+    }
+  }, [plans]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -123,23 +149,37 @@ export default function VendorProductDetailPage() {
 
   const handleVariantChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setCurrentVariant((prev) => ({
-      ...prev,
+    let updatedVariant = {
+      ...currentVariant,
       [name]: type === "checkbox" ? checked : value,
-    }));
+    };
+
+    // Auto-set zone to "virtual" when plan is "base"
+    if (name === "plan") {
+      const selectedPlan = plans.find((p) => p._id === value);
+      if (
+        selectedPlan &&
+        selectedPlan.name &&
+        selectedPlan.name.toLowerCase() === "base"
+      ) {
+        updatedVariant.zone = "virtual";
+      }
+    }
+
+    setCurrentVariant(updatedVariant);
   };
 
   const addVariant = () => {
-    if (!currentVariant.city || !currentVariant.plan || !currentVariant.price) {
-      toast.error("Please select city, plan, and enter price");
+    if (!currentVariant.zone || !currentVariant.plan || !currentVariant.price) {
+      toast.error("Please select zone, plan, and enter price");
       return;
     }
 
     const exists = form.variants.some(
-      (v) => v.city === currentVariant.city && v.plan === currentVariant.plan,
+      (v) => v.zone === currentVariant.zone && v.plan === currentVariant.plan,
     );
     if (exists) {
-      toast.error("This city-plan combination already exists");
+      toast.error("This zone-plan combination already exists");
       return;
     }
 
@@ -148,17 +188,19 @@ export default function VendorProductDetailPage() {
       variants: [
         ...prev.variants,
         {
-          ...currentVariant,
+          zone: currentVariant.zone,
+          plan: currentVariant.plan,
           price: parseFloat(currentVariant.price),
           salePrice: currentVariant.salePrice
             ? parseFloat(currentVariant.salePrice)
             : null,
+          isAvailable: currentVariant.isAvailable,
         },
       ],
     }));
 
     setCurrentVariant({
-      city: "",
+      zone: "",
       plan: "",
       price: "",
       salePrice: "",
@@ -257,12 +299,19 @@ export default function VendorProductDetailPage() {
     );
   };
 
-  const getCityName = (cityId) => {
-    const city = cities.find((c) => c._id === cityId);
-    return city ? city.name : "—";
+  const getZoneName = (zone) => {
+    const zoneLabel = ZONE_OPTIONS.find((z) => z.value === zone)?.label || zone;
+    if (zone === "basecity" && product?.vendor?.baseCity) {
+      return `📍 Your Base City (${product.vendor.baseCity})`;
+    }
+    return zoneLabel;
   };
 
   const getPlanName = (planId) => {
+    // Handle both ID and populated object
+    if (typeof planId === "object" && planId?.name) {
+      return planId.name;
+    }
     const plan = plans.find((p) => p._id === planId);
     return plan ? plan.name : "—";
   };
@@ -340,7 +389,7 @@ export default function VendorProductDetailPage() {
               <table className="variants-table">
                 <thead>
                   <tr>
-                    <th>City</th>
+                    <th>Zone</th>
                     <th>Plan</th>
                     <th>Price</th>
                     <th>Sale Price</th>
@@ -350,7 +399,7 @@ export default function VendorProductDetailPage() {
                 <tbody>
                   {product.variants.map((variant, idx) => (
                     <tr key={idx}>
-                      <td>{getCityName(variant.city)}</td>
+                      <td>{getZoneName(variant.zone)}</td>
                       <td>{getPlanName(variant.plan)}</td>
                       <td>₹{variant.price.toFixed(2)}</td>
                       <td>
@@ -619,22 +668,17 @@ export default function VendorProductDetailPage() {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label>City *</label>
+                    <label>Zone *</label>
                     <select
-                      name="city"
-                      value={currentVariant.city}
+                      name="zone"
+                      value={currentVariant.zone}
                       onChange={handleVariantChange}
-                      disabled={(() => {
-                        const selectedPlan = plans.find(
-                          (p) => p._id === currentVariant.plan,
-                        );
-                        return selectedPlan?.name?.toLowerCase() === "base";
-                      })()}
+                      disabled={currentVariant.plan ? false : true}
                     >
-                      <option value="">Select City</option>
-                      {cities.map((city) => (
-                        <option key={city._id} value={city._id}>
-                          {city.name}
+                      <option value="">Select Zone</option>
+                      {ZONE_OPTIONS.map((zone) => (
+                        <option key={zone.value} value={zone.value}>
+                          {zone.label}
                         </option>
                       ))}
                     </select>
@@ -695,7 +739,7 @@ export default function VendorProductDetailPage() {
                   <table className="variants-edit-table">
                     <thead>
                       <tr>
-                        <th>City</th>
+                        <th>Zone</th>
                         <th>Plan</th>
                         <th>Price</th>
                         <th>Sale Price</th>
@@ -704,28 +748,33 @@ export default function VendorProductDetailPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {form.variants.map((variant, index) => (
-                        <tr key={index}>
-                          <td>{getCityName(variant.city)}</td>
-                          <td>{getPlanName(variant.plan)}</td>
-                          <td>₹{variant.price.toFixed(2)}</td>
-                          <td>
-                            {variant.salePrice
-                              ? `₹${variant.salePrice.toFixed(2)}`
-                              : "—"}
-                          </td>
-                          <td>{variant.isAvailable ? "Yes" : "No"}</td>
-                          <td>
-                            <button
-                              type="button"
-                              className="btn-remove-variant"
-                              onClick={() => removeVariant(index)}
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                      {form.variants.map((variant, index) => {
+                        const zoneName =
+                          ZONE_OPTIONS.find((z) => z.value === variant.zone)
+                            ?.label || variant.zone;
+                        return (
+                          <tr key={index}>
+                            <td>{zoneName}</td>
+                            <td>{getPlanName(variant.plan)}</td>
+                            <td>₹{variant.price.toFixed(2)}</td>
+                            <td>
+                              {variant.salePrice
+                                ? `₹${variant.salePrice.toFixed(2)}`
+                                : "—"}
+                            </td>
+                            <td>{variant.isAvailable ? "Yes" : "No"}</td>
+                            <td>
+                              <button
+                                type="button"
+                                className="btn-remove-variant"
+                                onClick={() => removeVariant(index)}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

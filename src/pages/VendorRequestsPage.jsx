@@ -17,6 +17,7 @@ import {
   FileText,
   Check,
   X,
+  MapPin,
 } from "lucide-react";
 import {
   getVendorEditRequests,
@@ -833,6 +834,11 @@ export default function VendorRequestsPage() {
                       icon: Building2,
                       label: "Company",
                       value: selected.companyName || "—",
+                    },
+                    {
+                      icon: MapPin,
+                      label: "Base City",
+                      value: selected.baseCity || "—",
                     },
                     {
                       icon: Phone,

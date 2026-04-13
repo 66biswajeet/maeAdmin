@@ -38,7 +38,7 @@ export default function AdminEditProductPage() {
   });
 
   const [currentVariant, setCurrentVariant] = useState({
-    city: "",
+    zone: "",
     plan: "",
     price: "",
     salePrice: "",
@@ -47,6 +47,16 @@ export default function AdminEditProductPage() {
 
   const [deliverableInput, setDeliverableInput] = useState("");
   const [expandedCategories, setExpandedCategories] = useState(new Set());
+
+  // Zone options
+  const ZONE_OPTIONS = [
+    { value: "basecity", label: "📍 Your Base City" },
+    { value: "north", label: "🔵 North Zone" },
+    { value: "south", label: "🔵 South Zone" },
+    { value: "east", label: "🔵 East Zone" },
+    { value: "west", label: "🔵 West Zone" },
+    { value: "virtual", label: "🌐 Virtual" },
+  ];
 
   // Fetch product details and metadata
   useEffect(() => {
@@ -106,6 +116,22 @@ export default function AdminEditProductPage() {
       fetchData();
     }
   }, [productId, token]);
+
+  // Pre-select first plan when plans are loaded
+  useEffect(() => {
+    if (plans.length > 0 && !currentVariant.plan) {
+      const firstPlan = plans[0];
+      setCurrentVariant((prev) => ({
+        ...prev,
+        plan: firstPlan._id,
+        // Auto-set zone to "virtual" if first plan is "base"
+        zone:
+          firstPlan.name && firstPlan.name.toLowerCase() === "base"
+            ? "virtual"
+            : prev.zone,
+      }));
+    }
+  }, [plans]);
 
   // Handle form field changes
   const handleChange = (e) => {
@@ -185,18 +211,18 @@ export default function AdminEditProductPage() {
 
   // Add variant
   const addVariant = () => {
-    if (!currentVariant.city || !currentVariant.plan || !currentVariant.price) {
-      toast.error("Please select city, plan, and enter price");
+    if (!currentVariant.zone || !currentVariant.plan || !currentVariant.price) {
+      toast.error("Please select zone, plan, and enter price");
       return;
     }
 
-    // Check for duplicate city-plan combination
+    // Check for duplicate zone-plan combination
     const isDuplicate = formData.variants.some(
-      (v) => v.city === currentVariant.city && v.plan === currentVariant.plan,
+      (v) => v.zone === currentVariant.zone && v.plan === currentVariant.plan,
     );
 
     if (isDuplicate) {
-      toast.error("This city-plan combination already exists");
+      toast.error("This zone-plan combination already exists");
       return;
     }
 
@@ -205,14 +231,20 @@ export default function AdminEditProductPage() {
       variants: [
         ...prev.variants,
         {
-          ...currentVariant,
+          zone: currentVariant.zone,
+          plan: currentVariant.plan,
+          price: parseFloat(currentVariant.price),
+          salePrice: currentVariant.salePrice
+            ? parseFloat(currentVariant.salePrice)
+            : null,
+          isAvailable: currentVariant.isAvailable,
           id: Date.now(),
         },
       ],
     }));
 
     setCurrentVariant({
-      city: "",
+      zone: "",
       plan: "",
       price: "",
       salePrice: "",
@@ -231,10 +263,24 @@ export default function AdminEditProductPage() {
   // Handle variant field change
   const handleVariantChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setCurrentVariant((prev) => ({
-      ...prev,
+    let updatedVariant = {
+      ...currentVariant,
       [name]: type === "checkbox" ? checked : value,
-    }));
+    };
+
+    // Auto-set zone to "virtual" when plan is "base"
+    if (name === "plan") {
+      const selectedPlan = plans.find((p) => p._id === value);
+      if (
+        selectedPlan &&
+        selectedPlan.name &&
+        selectedPlan.name.toLowerCase() === "base"
+      ) {
+        updatedVariant.zone = "virtual";
+      }
+    }
+
+    setCurrentVariant(updatedVariant);
   };
 
   // Get city/plan names for display
@@ -577,22 +623,17 @@ export default function AdminEditProductPage() {
               </div>
 
               <div className="form-group">
-                <label>City *</label>
+                <label>Zone *</label>
                 <select
-                  name="city"
-                  value={currentVariant.city}
+                  name="zone"
+                  value={currentVariant.zone}
                   onChange={handleVariantChange}
-                  disabled={(() => {
-                    const selectedPlan = plans.find(
-                      (p) => p._id === currentVariant.plan,
-                    );
-                    return selectedPlan?.name?.toLowerCase() === "base";
-                  })()}
+                  disabled={currentVariant.plan ? false : true}
                 >
-                  <option value="">Select City</option>
-                  {cities.map((city) => (
-                    <option key={city._id} value={city._id}>
-                      {city.name}
+                  <option value="">Select Zone</option>
+                  {ZONE_OPTIONS.map((zone) => (
+                    <option key={zone.value} value={zone.value}>
+                      {zone.label}
                     </option>
                   ))}
                 </select>
@@ -650,7 +691,7 @@ export default function AdminEditProductPage() {
               <table className="variants-table">
                 <thead>
                   <tr>
-                    <th>City</th>
+                    <th>Zone</th>
                     <th>Plan</th>
                     <th>Price</th>
                     <th>Sale Price</th>
@@ -659,26 +700,31 @@ export default function AdminEditProductPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {formData.variants.map((variant) => (
-                    <tr key={variant.id || Math.random()}>
-                      <td>{getCityName(variant.city)}</td>
-                      <td>{getPlanName(variant.plan)}</td>
-                      <td>₹{variant.price}</td>
-                      <td>
-                        {variant.salePrice ? `₹${variant.salePrice}` : "-"}
-                      </td>
-                      <td>{variant.isAvailable ? "Yes" : "No"}</td>
-                      <td>
-                        <button
-                          type="button"
-                          onClick={() => removeVariant(variant.id)}
-                          className="btn-remove"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {formData.variants.map((variant) => {
+                    const zoneName =
+                      ZONE_OPTIONS.find((z) => z.value === variant.zone)
+                        ?.label || variant.zone;
+                    return (
+                      <tr key={variant.id || Math.random()}>
+                        <td>{zoneName}</td>
+                        <td>{getPlanName(variant.plan)}</td>
+                        <td>₹{variant.price}</td>
+                        <td>
+                          {variant.salePrice ? `₹${variant.salePrice}` : "-"}
+                        </td>
+                        <td>{variant.isAvailable ? "Yes" : "No"}</td>
+                        <td>
+                          <button
+                            type="button"
+                            onClick={() => removeVariant(variant.id)}
+                            className="btn-remove"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

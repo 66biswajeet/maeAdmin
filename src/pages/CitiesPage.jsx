@@ -4,9 +4,11 @@ import { getCities, createCity, updateCity, deleteCity } from "../services/api";
 import toast from "react-hot-toast";
 import "./CitiesPage.css";
 
+const ZONES = ["basecity", "north", "south", "east", "west", "virtual"];
+
 const EMPTY_FORM = {
   name: "",
-  state: "",
+  zone: "",
   country: "India",
 };
 
@@ -40,7 +42,7 @@ export default function CitiesPage() {
   const filtered = cities.filter(
     (c) =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.state.toLowerCase().includes(search.toLowerCase()),
+      c.zone.toLowerCase().includes(search.toLowerCase()),
   );
 
   const openAdd = () => {
@@ -53,14 +55,14 @@ export default function CitiesPage() {
     setEditing(city);
     setForm({
       name: city.name,
-      state: city.state || "",
+      zone: city.zone || "",
       country: city.country || "India",
     });
     setShowModal(true);
   };
 
   const handleSave = async () => {
-    if (!form.name.trim() || !form.state.trim()) {
+    if (!form.name.trim() || !form.zone.trim()) {
       toast.error("Please fill all fields");
       return;
     }
@@ -120,7 +122,7 @@ export default function CitiesPage() {
         <Search size={18} />
         <input
           type="text"
-          placeholder="Search cities by name or state..."
+          placeholder="Search cities by name or zone..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -144,7 +146,7 @@ export default function CitiesPage() {
             <thead>
               <tr>
                 <th>City Name</th>
-                <th>State</th>
+                <th>Zone</th>
                 <th>Country</th>
                 <th className="actions">Actions</th>
               </tr>
@@ -158,7 +160,7 @@ export default function CitiesPage() {
                       {city.name}
                     </div>
                   </td>
-                  <td>{city.state}</td>
+                  <td>{city.zone}</td>
                   <td>{city.country}</td>
                   <td className="actions">
                     <button
@@ -199,13 +201,18 @@ export default function CitiesPage() {
             </div>
 
             <div className="form-group">
-              <label>State *</label>
-              <input
-                type="text"
-                placeholder="e.g., Maharashtra"
-                value={form.state}
-                onChange={(e) => set("state", e.target.value)}
-              />
+              <label>Select Zone *</label>
+              <select
+                value={form.zone}
+                onChange={(e) => set("zone", e.target.value)}
+              >
+                <option value="">-- Choose a zone --</option>
+                {ZONES.map((z) => (
+                  <option key={z} value={z}>
+                    {z.charAt(0).toUpperCase() + z.slice(1)}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="form-group">
