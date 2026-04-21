@@ -4,6 +4,7 @@ import { ArrowLeft, Upload, Plus, Trash2, DollarSign } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import RichTextEditor from "../components/RichTextEditor";
+import CloudinaryUpload from "../components/CloudinaryUpload";
 import "./AdminEditProductPage.css";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
@@ -177,6 +178,18 @@ export default function AdminEditProductPage() {
     const newPreviews = files.map((file) => URL.createObjectURL(file));
     setNewImages((prev) => [...prev, ...files]);
     setPreviewImages((prev) => [...prev, ...newPreviews]);
+  };
+
+  // Handle Cloudinary image upload
+  const handleCloudinaryImageUpload = (cloudinaryUrl) => {
+    if (cloudinaryUrl) {
+      setNewImages((prev) => [
+        ...prev,
+        { url: cloudinaryUrl, alt: formData.title || "Product image" },
+      ]);
+      setPreviewImages((prev) => [...prev, cloudinaryUrl]);
+      toast.success("Image uploaded successfully!");
+    }
   };
 
   // Remove new image
@@ -816,18 +829,10 @@ export default function AdminEditProductPage() {
             </div>
           )}
 
-          <label htmlFor="image-input" className="image-upload-label">
-            <Upload size={20} />
-            <span>Upload Images</span>
-            <input
-              id="image-input"
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handleImageUpload}
-              style={{ display: "none" }}
-            />
-          </label>
+          <CloudinaryUpload
+            onUpload={handleCloudinaryImageUpload}
+            folder="products"
+          />
         </section>
 
         {/* Status & Features */}

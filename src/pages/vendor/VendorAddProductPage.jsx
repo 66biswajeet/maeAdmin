@@ -484,6 +484,7 @@ import {
 import toast from "react-hot-toast";
 import axios from "axios";
 import RichTextEditor from "../../components/RichTextEditor";
+import CloudinaryUpload from "../../components/CloudinaryUpload";
 import "./VendorAddProductPage.css";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
@@ -519,9 +520,23 @@ export default function VendorAddProductPage() {
 
   const token = localStorage.getItem("vendorToken");
 
-  // Zone options
+  // Get zone name with city for display
+  const getZoneName = (zone) => {
+    const zoneLabel = ZONE_OPTIONS.find((z) => z.value === zone)?.label || zone;
+    if (zone === "basecity" && vendorData?.baseCity) {
+      return `📍 ${vendorData.baseCity.toUpperCase()} (base city)`;
+    }
+    return zoneLabel;
+  };
+
+  // Zone options - basecity label will be updated dynamically with vendor data
   const ZONE_OPTIONS = [
-    { value: "basecity", label: "📍 Your Base City" },
+    {
+      value: "basecity",
+      label: vendorData?.baseCity
+        ? `📍 ${vendorData.baseCity.toUpperCase()} (base city)`
+        : "📍 Your Base City",
+    },
     { value: "north", label: "🔵 North Zone" },
     { value: "south", label: "🔵 South Zone" },
     { value: "east", label: "🔵 East Zone" },
@@ -543,7 +558,7 @@ export default function VendorAddProductPage() {
           categoriesRes.data.categories || categoriesRes.data || [],
         );
         setPlans(plansRes.data.plans || plansRes.data || []);
-        setVendorData(vendorRes.data);
+        setVendorData(vendorRes.data || vendorRes.data.vendor || {});
       } catch (err) {
         toast.error("Failed to load form data");
         console.error(err);
@@ -685,6 +700,21 @@ export default function VendorAddProductPage() {
       }));
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleImageUpload = (cloudinaryUrl) => {
+    if (cloudinaryUrl) {
+      setForm((prev) => ({
+        ...prev,
+        images: [
+          {
+            url: cloudinaryUrl,
+            alt: form.title || "Product image",
+          },
+        ],
+      }));
+      toast.success("Image uploaded successfully!");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -1132,9 +1162,7 @@ export default function VendorAddProductPage() {
                   <span></span>
                 </div>
                 {form.variants.map((variant, index) => {
-                  const zoneName =
-                    ZONE_OPTIONS.find((z) => z.value === variant.zone)?.label ||
-                    "—";
+                  const zoneName = getZoneName(variant.zone);
                   const planName =
                     plans.find((p) => p._id === variant.plan)?.name || "—";
                   return (
@@ -1201,49 +1229,13 @@ export default function VendorAddProductPage() {
             </div>
           </div>
           <div className="section-body">
-            <div className="image-upload-area">
-              {form.images.length > 0 ? (
-                <div className="image-preview-container">
-                  <img
-                    src={form.images[0].url}
-                    alt="Preview"
-                    className="image-preview-img"
-                  />
-                  <div className="image-preview-meta">
-                    <span className="img-name">
-                      {form.images[0].name || "Uploaded image"}
-                    </span>
-                    <span className="img-badge">
-                      <CheckCircle2 size={10} /> Uploaded
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    className="btn-remove-img"
-                    onClick={() => setForm((prev) => ({ ...prev, images: [] }))}
-                    title="Remove image"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ) : (
-                <label className="upload-label">
-                  <div className="upload-icon-wrap">
-                    <Upload size={20} />
-                  </div>
-                  <div className="upload-label-text">
-                    <strong>Click to upload image</strong>
-                    <span>PNG, JPG or WEBP · Max 5MB</span>
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    style={{ display: "none" }}
-                  />
-                </label>
-              )}
-            </div>
+            <CloudinaryUpload
+              onUpload={handleImageUpload}
+              folder="products"
+              showPreview={form.images.length > 0}
+              previewUrl={form.images[0]?.url}
+              onRemove={() => setForm((prev) => ({ ...prev, images: [] }))}
+            />
           </div>
         </div>
 

@@ -7,8 +7,10 @@ import "./PlansPage.css";
 const EMPTY_FORM = {
   name: "",
   description: "",
-  duration: "",
   sequence: 0,
+  allowVirtual: false,
+  allowBasecity: false,
+  additionalCitiesLimit: 0,
 };
 
 export default function PlansPage() {
@@ -55,8 +57,10 @@ export default function PlansPage() {
     setForm({
       name: plan.name,
       description: plan.description || "",
-      duration: plan.duration || "",
       sequence: plan.sequence || 0,
+      allowVirtual: plan.allowVirtual || false,
+      allowBasecity: plan.allowBasecity || false,
+      additionalCitiesLimit: plan.additionalCitiesLimit || 0,
     });
     setShowModal(true);
   };
@@ -148,7 +152,7 @@ export default function PlansPage() {
                 <th>Sequence</th>
                 <th>Plan Name</th>
                 <th>Description</th>
-                <th>Duration</th>
+                <th>City Configuration</th>
                 <th className="actions">Actions</th>
               </tr>
             </thead>
@@ -165,7 +169,26 @@ export default function PlansPage() {
                     </div>
                   </td>
                   <td>{plan.description || "—"}</td>
-                  <td>{plan.duration || "—"}</td>
+                  <td>
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: "#666",
+                        lineHeight: "1.6",
+                      }}
+                    >
+                      {plan.allowVirtual && !plan.allowBasecity ? (
+                        <span>🌐 Virtual Only</span>
+                      ) : plan.allowBasecity && !plan.allowVirtual ? (
+                        <span>
+                          📍 Base City + {plan.additionalCitiesLimit || 0}{" "}
+                          Additional
+                        </span>
+                      ) : (
+                        <span style={{ color: "#999" }}>—</span>
+                      )}
+                    </div>
+                  </td>
                   <td className="actions">
                     <button
                       className="btn-icon edit"
@@ -225,14 +248,114 @@ export default function PlansPage() {
               />
             </div>
 
-            <div className="form-group">
-              <label>Duration</label>
-              <input
-                type="text"
-                placeholder="e.g., 1 Month, 3 Months"
-                value={form.duration}
-                onChange={(e) => set("duration", e.target.value)}
-              />
+            {/* City Configuration Section */}
+            <div
+              style={{
+                borderTop: "1px solid #e0e0e0",
+                paddingTop: "16px",
+                marginTop: "16px",
+              }}
+            >
+              <h3
+                style={{
+                  margin: "0 0 12px 0",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                }}
+              >
+                📍 City Options
+              </h3>
+              <p
+                style={{
+                  fontSize: "12px",
+                  color: "#666",
+                  margin: "0 0 12px 0",
+                }}
+              >
+                Configure which city options are available for this plan
+              </p>
+
+              {/* Virtual Service Option */}
+              <div className="form-group">
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="serviceType"
+                    checked={form.allowVirtual && !form.allowBasecity}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        set("allowVirtual", true);
+                        set("allowBasecity", false);
+                        set("additionalCitiesLimit", 0);
+                      }
+                    }}
+                  />
+                  <span>🌐 Virtual Service Only</span>
+                </label>
+                <small style={{ marginLeft: "28px", color: "#999" }}>
+                  Client can only use virtual service (no physical cities)
+                </small>
+              </div>
+
+              {/* Base City Option */}
+              <div className="form-group">
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="serviceType"
+                    checked={form.allowBasecity && !form.allowVirtual}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        set("allowVirtual", false);
+                        set("allowBasecity", true);
+                      }
+                    }}
+                  />
+                  <span>📍 Base City + Additional Cities</span>
+                </label>
+                <small style={{ marginLeft: "28px", color: "#999" }}>
+                  Client can use their base city and add extra cities
+                </small>
+              </div>
+
+              {/* Additional Cities Limit */}
+              {form.allowBasecity && (
+                <div className="form-group">
+                  <label>Maximum Additional Cities Allowed (0-10)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="10"
+                    value={form.additionalCitiesLimit}
+                    onChange={(e) =>
+                      set(
+                        "additionalCitiesLimit",
+                        Math.min(
+                          10,
+                          Math.max(0, parseInt(e.target.value) || 0),
+                        ),
+                      )
+                    }
+                  />
+                  <small style={{ color: "#999" }}>
+                    First city is base city, limit is for extra cities
+                  </small>
+                </div>
+              )}
             </div>
 
             <div className="modal-actions">

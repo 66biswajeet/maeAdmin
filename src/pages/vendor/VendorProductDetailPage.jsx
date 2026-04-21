@@ -47,9 +47,14 @@ export default function VendorProductDetailPage() {
 
   const [expandedCategories, setExpandedCategories] = useState(new Set());
 
-  // Zone options
+  // Zone options - basecity label will be updated dynamically with vendor data
   const ZONE_OPTIONS = [
-    { value: "basecity", label: "📍 Your Base City" },
+    {
+      value: "basecity",
+      label: product?.vendor?.baseCity
+        ? `📍 ${product.vendor.baseCity.toUpperCase()} (base city)`
+        : "📍 Your Base City",
+    },
     { value: "north", label: "🔵 North Zone" },
     { value: "south", label: "🔵 South Zone" },
     { value: "east", label: "🔵 East Zone" },
@@ -302,7 +307,7 @@ export default function VendorProductDetailPage() {
   const getZoneName = (zone) => {
     const zoneLabel = ZONE_OPTIONS.find((z) => z.value === zone)?.label || zone;
     if (zone === "basecity" && product?.vendor?.baseCity) {
-      return `📍 Your Base City (${product.vendor.baseCity})`;
+      return `📍 ${product.vendor.baseCity.toUpperCase()} (base city)`;
     }
     return zoneLabel;
   };
@@ -749,9 +754,7 @@ export default function VendorProductDetailPage() {
                     </thead>
                     <tbody>
                       {form.variants.map((variant, index) => {
-                        const zoneName =
-                          ZONE_OPTIONS.find((z) => z.value === variant.zone)
-                            ?.label || variant.zone;
+                        const zoneName = getZoneName(variant.zone);
                         return (
                           <tr key={index}>
                             <td>{zoneName}</td>

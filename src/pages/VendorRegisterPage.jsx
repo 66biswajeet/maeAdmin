@@ -12,9 +12,13 @@ import {
   Eye,
   EyeOff,
   MapPin,
+  Search,
+  Loader,
+  X,
 } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { searchCities } from "../services/indiaPostAPI";
 import "./VendorRegisterPage.css";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
@@ -45,6 +49,13 @@ export default function VendorRegisterPage() {
   const [error, setError] = useState("");
   const [step, setStep] = useState(1); // 1 = personal, 2 = company
   const [isChecking, setIsChecking] = useState(true); // Auth check state
+
+  // City search states
+  const [citySearchInput, setCitySearchInput] = useState("");
+  const [citySearchResults, setCitySearchResults] = useState([]);
+  const [citySearchLoading, setCitySearchLoading] = useState(false);
+  const [citySearchError, setCitySearchError] = useState("");
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
 
   // Check if user is admin or super admin
   useEffect(() => {
@@ -89,6 +100,39 @@ export default function VendorRegisterPage() {
   }, [navigate]);
 
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
+
+  const handleCitySearch = async (input) => {
+    setCitySearchInput(input);
+    setCitySearchError("");
+
+    if (input.length < 2) {
+      setCitySearchResults([]);
+      return;
+    }
+
+    setCitySearchLoading(true);
+    try {
+      const result = await searchCities(input);
+      if (result.success) {
+        setCitySearchResults(result.cities);
+      } else {
+        setCitySearchError(result.error || "No cities found");
+        setCitySearchResults([]);
+      }
+    } catch (err) {
+      setCitySearchError("Error searching cities");
+      setCitySearchResults([]);
+    } finally {
+      setCitySearchLoading(false);
+    }
+  };
+
+  const handleSelectCity = (city) => {
+    set("baseCity", city.name);
+    setCitySearchInput("");
+    setCitySearchResults([]);
+    setShowCityDropdown(false);
+  };
 
   const validateStep1 = () => {
     if (!form.name.trim()) return "Full name is required";
@@ -331,12 +375,149 @@ export default function VendorRegisterPage() {
                     <MapPin size={13} /> Base City / Office Location{" "}
                     <span>*</span>
                   </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Mumbai, Delhi, Bangalore"
-                    value={form.baseCity}
-                    onChange={(e) => set("baseCity", e.target.value)}
-                  />
+                  <div style={{ position: "relative", width: "100%" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "6px",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div
+                        style={{
+                          flex: 1,
+                          position: "relative",
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Search
+                          size={13}
+                          style={{
+                            position: "absolute",
+                            left: "10px",
+                            color: "#999",
+                            pointerEvents: "none",
+                          }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Search by city name or pincode..."
+                          value={form.baseCity || citySearchInput}
+                          onChange={(e) => handleCitySearch(e.target.value)}
+                          onFocus={() => {
+                            if (citySearchResults.length > 0)
+                              setShowCityDropdown(true);
+                          }}
+                          style={{
+                            paddingLeft: "32px",
+                            width: "100%",
+                          }}
+                        />
+                        {form.baseCity && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              set("baseCity", "");
+                              setCitySearchInput("");
+                              setCitySearchResults([]);
+                            }}
+                            style={{
+                              position: "absolute",
+                              right: "10px",
+                              background: "none",
+                              border: "none",
+                              cursor: "pointer",
+                              padding: "4px",
+                              display: "flex",
+                              alignItems: "center",
+                            }}
+                          >
+                            <X size={14} color="#666" />
+                          </button>
+                        )}
+                      </div>
+                      {citySearchLoading && (
+                        <Loader
+                          size={16}
+                          style={{
+                            animation: "spin 1s linear infinite",
+                          }}
+                        />
+                      )}
+                    </div>
+
+                    {/* City search results dropdown */}
+                    {showCityDropdown && citySearchResults.length > 0 && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "100%",
+                          left: 0,
+                          right: 0,
+                          background: "white",
+                          border: "1px solid #ddd",
+                          borderRadius: "6px",
+                          marginTop: "4px",
+                          maxHeight: "300px",
+                          overflowY: "auto",
+                          zIndex: 1000,
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        }}
+                      >
+                        {citySearchResults.map((city, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => handleSelectCity(city)}
+                            style={{
+                              width: "100%",
+                              padding: "10px 12px",
+                              background: "white",
+                              border: "none",
+                              textAlign: "left",
+                              cursor: "pointer",
+                              fontSize: "14px",
+                              borderBottom: "1px solid #f0f0f0",
+                              transition: "background-color 0.2s",
+                            }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "#f5f5f5")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.backgroundColor = "white")
+                            }
+                          >
+                            <div style={{ fontWeight: "500" }}>{city.name}</div>
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#666",
+                                marginTop: "2px",
+                              }}
+                            >
+                              {city.state}
+                              {city.pincode && ` • ${city.pincode}`}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Search error */}
+                    {citySearchError && (
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          color: "#e74c3c",
+                          marginTop: "6px",
+                        }}
+                      >
+                        {citySearchError}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="vr-notice">
                   <Shield size={14} />
