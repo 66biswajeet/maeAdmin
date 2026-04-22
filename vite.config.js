@@ -6,7 +6,7 @@ export default defineConfig({
   server: { port: 4100 },
   build: {
     cssMinify: true,
-    outDir: 'dist',
-    minify: 'terser',
+    outDir: "dist",
+    minify: "terser",
   },
 });
