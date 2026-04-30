@@ -5,10 +5,13 @@ const API = axios.create({
 });
 
 API.interceptors.request.use((config) => {
-  // Check for admin token first, then vendor token
+  const isVendorPath = window.location.pathname.startsWith("/vendor");
+  
   const adminToken = localStorage.getItem("token");
   const vendorToken = localStorage.getItem("vendorToken");
-  const token = adminToken || vendorToken;
+  
+  // Prioritize vendor token if on vendor path, otherwise admin token
+  const token = isVendorPath ? (vendorToken || adminToken) : (adminToken || vendorToken);
 
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
@@ -24,8 +27,10 @@ API.interceptors.response.use(
       localStorage.removeItem("vendorToken");
       localStorage.removeItem("admin");
       localStorage.removeItem("vendor");
-      // Redirect to login
-      window.location.href = "/login";
+      
+      // Smart redirect
+      const isVendorPath = window.location.pathname.startsWith("/vendor");
+      window.location.href = isVendorPath ? "/vendor/login" : "/login";
     }
     return Promise.reject(error);
   },
@@ -140,5 +145,18 @@ export const updateBookingStatus = (id, data) =>
   API.patch(`/bookings/${id}/status`, data);
 export const getVendorBookings = () => API.get("/bookings/vendor/my");
 export const createBooking = (data) => API.post("/bookings", data);
+
+// Email Templates
+export const getEmailTemplates = () => API.get("/email-templates");
+export const getEmailTemplate = (id) => API.get(`/email-templates/${id}`);
+export const createEmailTemplate = (data) => API.post("/email-templates", data);
+export const updateEmailTemplate = (id, data) => API.patch(`/email-templates/${id}`, data);
+export const deleteEmailTemplate = (id) => API.delete(`/email-templates/${id}`);
+
+// Notifications
+export const getNotifications = () => API.get("/notifications/");
+export const markNotificationRead = (id) => API.patch(`/notifications/${id}/read`);
+export const markAllNotificationsRead = () => API.patch("/notifications/read-all");
+export const deleteNotification = (id) => API.delete(`/notifications/${id}`);
 
 export default API;

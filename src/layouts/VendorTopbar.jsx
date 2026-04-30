@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Search, Bell, User, LogOut } from "lucide-react";
+import { Search, User, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import logo from "../assets/logo.png";
@@ -14,7 +14,7 @@ export default function VendorTopbar() {
     vendor = JSON.parse(localStorage.getItem("vendor"));
   } catch {}
 
-  // Close menu on outside click
+  // Close menus on outside click
   useEffect(() => {
     const handler = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -55,11 +55,6 @@ export default function VendorTopbar() {
       </div>
 
       <div className="tb-right">
-        {/* Notifications */}
-        <button className="tb-bell">
-          <Bell />
-        </button>
-
         {/* User menu */}
         <div className="tb-user-wrapper" ref={menuRef}>
           <button className="tb-user" onClick={() => setMenuOpen((o) => !o)}>

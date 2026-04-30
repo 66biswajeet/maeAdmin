@@ -31,6 +31,7 @@ import AdminBookingsPage from "./pages/AdminBookingsPage";
 import VendorBookingsPage from "./pages/vendor/VendorBookingsPage";
 import BookingDetail from "./pages/BookingDetail";
 import VendorBookingDetail from "./pages/BookingDetail";
+import EmailTemplatesPage from "./pages/EmailTemplatesPage";
 
 import "./App.css";
 
@@ -149,6 +150,7 @@ export default function App() {
           <Route path="bookings/:id" element={<BookingDetail />} />
           <Route path="settings/site" element={<SiteSettingsPage />} />
           <Route path="settings/meta" element={<MetaSettingsPage />} />
+          <Route path="settings/email-templates" element={<EmailTemplatesPage />} />
           <Route path="settings/profile" element={<ProfileSettings />} />
           <Route path="*" element={<Navigate to="/settings/site" replace />} />
         </Route>
