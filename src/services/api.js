@@ -14,6 +14,23 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
+// Response interceptor to handle expired tokens (401)
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Clear auth data
+      localStorage.removeItem("token");
+      localStorage.removeItem("vendorToken");
+      localStorage.removeItem("admin");
+      localStorage.removeItem("vendor");
+      // Redirect to login
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  },
+);
+
 // Auth
 export const register = (data) => API.post("/auth/register", data);
 export const login = (data) => API.post("/auth/login", data);
