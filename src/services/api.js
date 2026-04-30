@@ -116,4 +116,12 @@ export const updateEmpanelment = (id, data) =>
   API.patch(`/empanelments/${id}`, data);
 export const deleteEmpanelment = (id) => API.delete(`/empanelments/${id}`);
 
+// Bookings
+export const getBookings = (params) => API.get("/bookings", { params });
+export const getBooking = (id) => API.get(`/bookings/${id}`);
+export const updateBookingStatus = (id, data) =>
+  API.patch(`/bookings/${id}/status`, data);
+export const getVendorBookings = () => API.get("/bookings/vendor/my");
+export const createBooking = (data) => API.post("/bookings", data);
+
 export default API;

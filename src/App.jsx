@@ -27,6 +27,10 @@ import StaffRequestsPage from "./pages/StaffRequestsPage";
 import AdminProductRequestsPage from "./pages/AdminProductRequestsPage";
 import AdminAllProductsPage from "./pages/AdminAllProductsPage";
 import AdminEditProductPage from "./pages/AdminEditProductPage";
+import AdminBookingsPage from "./pages/AdminBookingsPage";
+import VendorBookingsPage from "./pages/vendor/VendorBookingsPage";
+import BookingDetail from "./pages/BookingDetail";
+import VendorBookingDetail from "./pages/BookingDetail";
 
 import "./App.css";
 
@@ -79,15 +83,7 @@ export default function App() {
             path="/vendor/products/:id"
             element={<VendorProductDetailPage />}
           />
-          <Route
-            path="/vendor/orders"
-            element={
-              <div className="page-content">
-                <h2>My Orders</h2>
-                <p style={{ color: "#999" }}>Coming soon</p>
-              </div>
-            }
-          />
+          <Route path="/vendor/orders" element={<VendorBookingsPage />} />
           <Route
             path="/vendor/reviews"
             element={
@@ -107,6 +103,10 @@ export default function App() {
             }
           />
           <Route path="/vendor/profile" element={<VendorProfilePage />} />
+          <Route
+            path="/vendor/bookings/:id"
+            element={<VendorBookingDetail />}
+          />
         </Route>
 
         {/* Protected Admin Routes */}
@@ -145,6 +145,8 @@ export default function App() {
           <Route path="customers/all" element={<PlaceholderPage />} />
           <Route path="customers/support" element={<PlaceholderPage />} />
           <Route path="orders" element={<PlaceholderPage />} />
+          <Route path="bookings" element={<AdminBookingsPage />} />
+          <Route path="bookings/:id" element={<BookingDetail />} />
           <Route path="settings/site" element={<SiteSettingsPage />} />
           <Route path="settings/meta" element={<MetaSettingsPage />} />
           <Route path="settings/profile" element={<ProfileSettings />} />

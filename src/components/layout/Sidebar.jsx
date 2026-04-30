@@ -69,7 +69,15 @@ const navItems = [
       { label: "Customer Support", path: "/customers/support" },
     ],
   },
-  { icon: ShoppingCart, label: "Orders", path: "/orders" },
+  {
+    icon: ShoppingCart,
+    label: "Orders",
+    path: "/orders",
+    children: [
+      { label: "All Orders", path: "/orders" },
+      { label: "Bookings", path: "/bookings" },
+    ],
+  },
   {
     icon: Settings,
     label: "Settings",
