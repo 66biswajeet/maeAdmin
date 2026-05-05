@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getBooking, updateBookingStatus } from "../services/api";
+import "./BookingDetail.css";
 import {
   ArrowLeft,
   Building2,
