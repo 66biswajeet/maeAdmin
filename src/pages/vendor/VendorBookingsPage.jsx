@@ -32,12 +32,12 @@ const fmtTime = (d) =>
   d ? new Date(d).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "";
 
 const STATUS_OPTS = [
-  { value: "",            label: "All Statuses" },
-  { value: "pending",     label: "Pending" },
-  { value: "accepted",    label: "Accepted" },
+  { value: "", label: "All Statuses" },
+  { value: "pending", label: "Pending" },
+  { value: "accepted", label: "Accepted" },
   { value: "in_progress", label: "In Progress" },
-  { value: "completed",   label: "Completed" },
-  { value: "cancelled",   label: "Cancelled" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
 ];
 
 const PAGE_SIZE = 12;
@@ -45,11 +45,11 @@ const PAGE_SIZE = 12;
 /* ── Status badge ─────────────────────────────────────────── */
 function StatusBadge({ status }) {
   const map = {
-    pending:     "vb-status--pending",
-    accepted:    "vb-status--accepted",
+    pending: "vb-status--pending",
+    accepted: "vb-status--accepted",
     in_progress: "vb-status--progress",
-    completed:   "vb-status--completed",
-    cancelled:   "vb-status--cancelled",
+    completed: "vb-status--completed",
+    cancelled: "vb-status--cancelled",
   };
   return (
     <span className={`vb-status ${map[status] || "vb-status--pending"}`}>
@@ -100,13 +100,13 @@ function CityPills({ items }) {
 
 /* ── Main component ───────────────────────────────────────── */
 export default function VendorBookingsPage() {
-  const [bookings,     setBookings]     = useState([]);
-  const [loading,      setLoading]      = useState(false);
-  const [updating,     setUpdating]     = useState(null);
-  const [toast,        setToast]        = useState(null);
-  const [search,       setSearch]       = useState("");
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [updating, setUpdating] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [page,         setPage]         = useState(1);
+  const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
   /* ── fetch ── */
@@ -153,8 +153,8 @@ export default function VendorBookingsPage() {
       if (statusFilter && b.status !== statusFilter) return false;
       if (!q) return true;
       const customer = (b.customer?.name || b.customer?.email || "").toLowerCase();
-      const id       = (b._id || "").toLowerCase();
-      const product  = (b.items || [])
+      const id = (b._id || "").toLowerCase();
+      const product = (b.items || [])
         .map((it) => (it.productSnapshot?.title || "").toLowerCase()).join(" ");
       return customer.includes(q) || id.includes(q) || product.includes(q);
     });
@@ -162,16 +162,16 @@ export default function VendorBookingsPage() {
 
   /* ── pagination ── */
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const safePage   = Math.min(page, totalPages);
-  const paginated  = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const safePage = Math.min(page, totalPages);
+  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
   useEffect(() => { setPage(1); }, [search, statusFilter]);
 
   /* ── stats ── */
   const stats = useMemo(() => ({
-    total:     bookings.length,
-    pending:   bookings.filter((b) => b.status === "pending").length,
+    total: bookings.length,
+    pending: bookings.filter((b) => b.status === "pending").length,
     completed: bookings.filter((b) => b.status === "completed").length,
-    revenue:   bookings.reduce((s, b) => s + (Number(b.total) || 0), 0),
+    revenue: bookings.reduce((s, b) => s + (Number(b.total) || 0), 0),
   }), [bookings]);
 
   /* ── render ── */
@@ -190,10 +190,10 @@ export default function VendorBookingsPage() {
 
       {/* ── Stats ── */}
       <div className="vb-stats">
-        <StatCard icon={<Package size={18}/>}    value={stats.total}        label="Total Orders" color="blue"  />
-        <StatCard icon={<Clock size={18}/>}       value={stats.pending}      label="Pending"      color="amber" />
-        <StatCard icon={<CheckCircle size={18}/>} value={stats.completed}    label="Completed"    color="green" />
-        <StatCard icon={<IndianRupee size={18}/>} value={fmt(stats.revenue)} label="Revenue"      color="teal"  />
+        <StatCard icon={<Package size={18} />} value={stats.total} label="Total Orders" color="blue" />
+        <StatCard icon={<Clock size={18} />} value={stats.pending} label="Pending" color="amber" />
+        <StatCard icon={<CheckCircle size={18} />} value={stats.completed} label="Completed" color="green" />
+        <StatCard icon={<IndianRupee size={18} />} value={fmt(stats.revenue)} label="Revenue" color="teal" />
       </div>
 
       {/* ── Toolbar ── */}
@@ -247,16 +247,16 @@ export default function VendorBookingsPage() {
         <>
           <div className="vb-cards">
             {paginated.map((b) => {
-              const isUpdating  = updating === b._id;
-              const canAccept   = b.status === "pending";
+              const isUpdating = updating === b._id;
+              const canAccept = b.status === "pending";
               const canProgress = b.status === "accepted";
               const canComplete = b.status === "accepted" || b.status === "in_progress";
-              const canCancel   = b.status !== "cancelled" && b.status !== "completed";
+              const canCancel = b.status !== "cancelled" && b.status !== "completed";
 
-              const customerName  = b.customer?.name  || "—";
+              const customerName = b.customer?.name || "—";
               const customerEmail = b.customer?.email || "";
               const customerPhone = b.customer?.phone || "";
-              const itemTitles    = (b.items || []).map(
+              const itemTitles = (b.items || []).map(
                 (it) => it.productSnapshot?.title || it.title || "Service"
               ).filter(Boolean);
 
@@ -405,10 +405,10 @@ export default function VendorBookingsPage() {
                     p === "…"
                       ? <span key={`e${i}`} className="vb-page-ellipsis">…</span>
                       : <button
-                          key={p}
-                          className={`vb-page-btn ${p === safePage ? "active" : ""}`}
-                          onClick={() => setPage(p)}
-                        >{p}</button>
+                        key={p}
+                        className={`vb-page-btn ${p === safePage ? "active" : ""}`}
+                        onClick={() => setPage(p)}
+                      >{p}</button>
                   )}
                 <button
                   className="vb-page-btn"

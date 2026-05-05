@@ -57,20 +57,107 @@ const PAGE_SIZE = 15;
 
 /* ── Status badge ─────────────────────────────────────────────── */
 function StatusBadge({ status }) {
-  if (!status) return <span className="bk-status pending">—</span>;
+  const statusStyles = {
+    pending: {
+      bg: "#fffbeb",
+      color: "#d97706",
+      border: "1px solid rgba(217,119,6,0.18)",
+    },
+    accepted: {
+      bg: "#eff6ff",
+      color: "#2563eb",
+      border: "1px solid rgba(37,99,235,0.15)",
+    },
+    confirmed: {
+      bg: "#eff6ff",
+      color: "#2563eb",
+      border: "1px solid rgba(37,99,235,0.15)",
+    },
+    in_progress: {
+      bg: "#faf5ff",
+      color: "#7c3aed",
+      border: "1px solid rgba(124,58,237,0.15)",
+    },
+    completed: {
+      bg: "rgba(0,201,167,0.08)",
+      color: "#009e84",
+      border: "1px solid rgba(0,191,174,0.2)",
+    },
+    cancelled: {
+      bg: "#fef2f2",
+      color: "#ef4444",
+      border: "1px solid rgba(239,68,68,0.18)",
+    },
+    rejected: {
+      bg: "#fef2f2",
+      color: "#ef4444",
+      border: "1px solid rgba(239,68,68,0.18)",
+    },
+  };
+
+  const s = status?.toLowerCase() || "pending";
+  const style = statusStyles[s] || statusStyles.pending;
+
   return (
-    <span className={`bk-status ${status.toLowerCase()}`}>
-      <span className="bk-status__dot" />
-      {status.replace("_", " ")}
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "5px",
+        fontSize: "11.5px",
+        fontWeight: 600,
+        padding: "4px 10px",
+        borderRadius: "20px",
+        textTransform: "capitalize",
+        whiteSpace: "nowrap",
+        backgroundColor: style.bg,
+        color: style.color,
+        border: style.border,
+      }}
+    >
+      <span
+        style={{
+          width: "6px",
+          height: "6px",
+          borderRadius: "50%",
+          background: "currentColor",
+          flexShrink: 0,
+        }}
+      />
+      {status?.replace("_", " ") || "—"}
     </span>
   );
 }
 
 /* ── Stat card ────────────────────────────────────────────────── */
 function StatCard({ icon, value, label, color }) {
+  const colorStyles = {
+    blue: { bg: "#eff6ff", text: "#2563eb" },
+    teal: { bg: "rgba(0,201,167,0.1)", text: "#00c9a7" },
+    amber: { bg: "#fffbeb", text: "#d97706" },
+    green: { bg: "#f0fdf4", text: "#16a34a" },
+    red: { bg: "#fef2f2", text: "#ef4444" },
+  };
+
+  const style = colorStyles[color] || colorStyles.blue;
+
   return (
     <div className="bk-stat-card">
-      <div className={`bk-stat-icon ${color}`}>{icon}</div>
+      <div
+        style={{
+          width: "42px",
+          height: "42px",
+          borderRadius: "10px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          backgroundColor: style.bg,
+          color: style.text,
+        }}
+      >
+        {icon}
+      </div>
       <div className="bk-stat-info">
         <div className="bk-stat-value">{value}</div>
         <div className="bk-stat-label">{label}</div>
@@ -120,7 +207,7 @@ export default function AdminBookingsPage() {
     try {
       await updateBookingStatus(id, { status });
       setBookings((prev) =>
-        prev.map((b) => (b._id === id ? { ...b, status } : b))
+        prev.map((b) => (b._id === id ? { ...b, status } : b)),
       );
       showToast(`Booking marked as ${status}`, "success");
     } catch (err) {
@@ -161,7 +248,7 @@ export default function AdminBookingsPage() {
   const safePage = Math.min(page, totalPages);
   const paginated = filtered.slice(
     (safePage - 1) * PAGE_SIZE,
-    safePage * PAGE_SIZE
+    safePage * PAGE_SIZE,
   );
 
   // Reset to page 1 when filters change
@@ -360,7 +447,9 @@ export default function AdminBookingsPage() {
 
                         {/* Date */}
                         <td>
-                          <span className="bk-date">{fmtDate(b.createdAt)}</span>
+                          <span className="bk-date">
+                            {fmtDate(b.createdAt)}
+                          </span>
                           <span className="bk-date-time">
                             {fmtTime(b.createdAt)}
                           </span>
@@ -386,9 +475,7 @@ export default function AdminBookingsPage() {
                                 id={`bk-complete-${b._id}`}
                                 className="bk-btn bk-btn--complete"
                                 disabled={isUpdating}
-                                onClick={() =>
-                                  changeStatus(b._id, "completed")
-                                }
+                                onClick={() => changeStatus(b._id, "completed")}
                                 title="Mark Completed"
                               >
                                 <TrendingUp size={12} />
@@ -445,7 +532,7 @@ export default function AdminBookingsPage() {
                       (p) =>
                         p === 1 ||
                         p === totalPages ||
-                        Math.abs(p - safePage) <= 1
+                        Math.abs(p - safePage) <= 1,
                     )
                     .reduce((acc, p, idx, arr) => {
                       if (idx > 0 && p - arr[idx - 1] > 1) {
@@ -474,7 +561,7 @@ export default function AdminBookingsPage() {
                         >
                           {p}
                         </button>
-                      )
+                      ),
                     )}
                   <button
                     className="bk-page-btn"
@@ -491,9 +578,7 @@ export default function AdminBookingsPage() {
       </div>
 
       {/* Toast */}
-      {toast && (
-        <div className={`bk-toast ${toast.type}`}>{toast.msg}</div>
-      )}
+      {toast && <div className={`bk-toast ${toast.type}`}>{toast.msg}</div>}
     </div>
   );
 }
