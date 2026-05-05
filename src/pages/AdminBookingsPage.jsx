@@ -100,16 +100,8 @@ function StatusBadge({ status }) {
 
   return (
     <span
+      className={`bk-status ${s}`}
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "5px",
-        fontSize: "11.5px",
-        fontWeight: 600,
-        padding: "4px 10px",
-        borderRadius: "20px",
-        textTransform: "capitalize",
-        whiteSpace: "nowrap",
         backgroundColor: style.bg,
         color: style.color,
         border: style.border,
@@ -144,14 +136,8 @@ function StatCard({ icon, value, label, color }) {
   return (
     <div className="bk-stat-card">
       <div
+        className={`bk-stat-icon ${color}`}
         style={{
-          width: "42px",
-          height: "42px",
-          borderRadius: "10px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
           backgroundColor: style.bg,
           color: style.text,
         }}
