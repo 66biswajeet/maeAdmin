@@ -169,6 +169,47 @@
 }
 
 /* ─── SECTIONS ────────────────────────────────────── */
+.section-header-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+}
+
+.btn-outline-xs, .btn-primary-xs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-outline-xs {
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+}
+
+.btn-outline-xs:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.btn-primary-xs {
+  background: #10b981;
+  border: 1px solid #059669;
+  color: white;
+}
+
+.btn-primary-xs:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
 .form-section {
   background: var(--surface);
   border: 1px solid var(--border);

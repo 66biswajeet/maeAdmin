@@ -542,9 +542,9 @@ export default function AdminAllProductsPage() {
                           west: "🔵 West Zone",
                         };
                         const zoneName = ZONE_MAP[variant.zone] || variant.zone;
-                        const planName =
-                          plans.find((p) => p._id === variant.plan)?.name ||
-                          "—";
+                        const planName = (typeof variant.plan === 'object' && variant.plan?.name)
+                          ? variant.plan.name
+                          : (plans.find(p => p._id === (variant.plan?._id || variant.plan))?.name || "—");
                         return (
                           <tr key={idx}>
                             <td>{zoneName}</td>

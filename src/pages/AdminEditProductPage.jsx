@@ -303,7 +303,13 @@ export default function AdminEditProductPage() {
   };
 
   const getPlanName = (planId) => {
-    const plan = plans.find((p) => p._id === planId);
+    if (!planId) return "Unknown Plan";
+    // If planId is already a populated object with a name
+    if (typeof planId === "object" && planId.name) return planId.name;
+
+    // Otherwise look it up in the plans state
+    const id = typeof planId === "object" ? planId._id : planId;
+    const plan = plans.find((p) => p._id === id);
     return plan?.name || "Unknown Plan";
   };
 

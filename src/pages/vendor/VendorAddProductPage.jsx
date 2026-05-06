@@ -1,472 +1,3 @@
-// import { useState, useEffect } from "react";
-// import { useNavigate } from "react-router-dom";
-// import { ArrowLeft, Upload, Plus, Trash2, DollarSign } from "lucide-react";
-// import toast from "react-hot-toast";
-// import axios from "axios";
-// import "./VendorAddProductPage.css";
-
-// const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
-
-// export default function VendorAddProductPage() {
-//   const navigate = useNavigate();
-//   const [loading, setLoading] = useState(false);
-//   const [categories, setCategories] = useState([]);
-//   const [cities, setCities] = useState([]);
-//   const [plans, setPlans] = useState([]);
-//   const [categoriesLoading, setCategoriesLoading] = useState(true);
-//   const [citiesLoading, setCitiesLoading] = useState(true);
-//   const [plansLoading, setPlansLoading] = useState(true);
-
-//   const [form, setForm] = useState({
-//     title: "",
-//     description: "",
-//     shortDesc: "",
-//     sku: "",
-//     category: "",
-//     commission: "",
-//     images: [],
-//     variants: [],
-//   });
-
-//   const [currentVariant, setCurrentVariant] = useState({
-//     city: "",
-//     plan: "",
-//     price: "",
-//     salePrice: "",
-//     isAvailable: true,
-//   });
-
-//   const token = localStorage.getItem("vendorToken");
-
-//   // Fetch categories, cities, and plans on mount
-//   useEffect(() => {
-//     const fetchData = async () => {
-//       try {
-//         const [categoriesRes, citiesRes, plansRes] = await Promise.all([
-//           axios.get(`${API_BASE}/categories`),
-//           axios.get(`${API_BASE}/cities`),
-//           axios.get(`${API_BASE}/plans`),
-//         ]);
-//         setCategories(
-//           categoriesRes.data.categories || categoriesRes.data || [],
-//         );
-//         setCities(citiesRes.data.cities || citiesRes.data || []);
-//         setPlans(plansRes.data.plans || plansRes.data || []);
-//       } catch (err) {
-//         toast.error("Failed to load form data");
-//         console.error(err);
-//       } finally {
-//         setCategoriesLoading(false);
-//         setCitiesLoading(false);
-//         setPlansLoading(false);
-//       }
-//     };
-//     fetchData();
-//   }, []);
-
-//   const handleChange = (e) => {
-//     const { name, value } = e.target;
-//     setForm((prev) => ({ ...prev, [name]: value }));
-//   };
-
-//   const handleVariantChange = (e) => {
-//     const { name, value, type, checked } = e.target;
-//     setCurrentVariant((prev) => ({
-//       ...prev,
-//       [name]: type === "checkbox" ? checked : value,
-//     }));
-//   };
-
-//   const addVariant = () => {
-//     if (!currentVariant.city || !currentVariant.plan || !currentVariant.price) {
-//       toast.error("Please select city, plan, and enter price");
-//       return;
-//     }
-
-//     // Check if this combination already exists
-//     const exists = form.variants.some(
-//       (v) => v.city === currentVariant.city && v.plan === currentVariant.plan,
-//     );
-//     if (exists) {
-//       toast.error("This city-plan combination already exists");
-//       return;
-//     }
-
-//     setForm((prev) => ({
-//       ...prev,
-//       variants: [
-//         ...prev.variants,
-//         {
-//           ...currentVariant,
-//           price: parseFloat(currentVariant.price),
-//           salePrice: currentVariant.salePrice
-//             ? parseFloat(currentVariant.salePrice)
-//             : null,
-//         },
-//       ],
-//     }));
-
-//     // Reset variant form
-//     setCurrentVariant({
-//       city: "",
-//       plan: "",
-//       price: "",
-//       salePrice: "",
-//       isAvailable: true,
-//     });
-//     toast.success("Variant added!");
-//   };
-
-//   const removeVariant = (index) => {
-//     setForm((prev) => ({
-//       ...prev,
-//       variants: prev.variants.filter((_, i) => i !== index),
-//     }));
-//   };
-
-//   const handleImageChange = (e) => {
-//     const file = e.target.files[0];
-//     if (file) {
-//       const reader = new FileReader();
-//       reader.onloadend = () => {
-//         setForm((prev) => ({
-//           ...prev,
-//           images: [{ url: reader.result, alt: form.title || "Product image" }],
-//         }));
-//       };
-//       reader.readAsDataURL(file);
-//     }
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     if (!form.title || !form.sku) {
-//       toast.error("Please fill in title and SKU");
-//       return;
-//     }
-
-//     if (form.variants.length === 0) {
-//       toast.error("Please add at least one variant (city-plan combination)");
-//       return;
-//     }
-
-//     setLoading(true);
-//     try {
-//       const productData = {
-//         title: form.title,
-//         description: form.description,
-//         shortDesc: form.shortDesc,
-//         sku: form.sku,
-//         category: form.category || null,
-//         commission: parseFloat(form.commission) || 0,
-//         images: form.images,
-//         variants: form.variants,
-//       };
-
-//       await axios.post(`${API_BASE}/products/vendor/create`, productData, {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       toast.success("Product submitted for approval!");
-//       navigate("/vendor/products/all");
-//     } catch (err) {
-//       toast.error(err.response?.data?.message || "Failed to create product");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="vendor-add-product-page">
-//       <button
-//         className="btn-back"
-//         onClick={() => navigate("/vendor/products/all")}
-//       >
-//         <ArrowLeft size={16} />
-//         Back to Products
-//       </button>
-
-//       <div className="page-header">
-//         <h1>Add New Product</h1>
-//         <p>Your product will be reviewed and approved before going live</p>
-//       </div>
-
-//       <form onSubmit={handleSubmit} className="card product-form">
-//         <div className="form-row">
-//           <div className="form-group">
-//             <label>Product Name *</label>
-//             <input
-//               type="text"
-//               name="title"
-//               value={form.title}
-//               onChange={handleChange}
-//               placeholder="Enter product name"
-//               required
-//             />
-//           </div>
-//           <div className="form-group">
-//             <label>SKU (Stock Keeping Unit) *</label>
-//             <input
-//               type="text"
-//               name="sku"
-//               value={form.sku}
-//               onChange={handleChange}
-//               placeholder="e.g., PROD-001"
-//               required
-//             />
-//           </div>
-//         </div>
-
-//         <div className="form-group">
-//           <label>Description</label>
-//           <textarea
-//             name="description"
-//             value={form.description}
-//             onChange={handleChange}
-//             placeholder="Describe your product in detail..."
-//             rows="4"
-//           />
-//         </div>
-
-//         <div className="form-group">
-//           <label>Short Description</label>
-//           <input
-//             type="text"
-//             name="shortDesc"
-//             value={form.shortDesc}
-//             onChange={handleChange}
-//             placeholder="Brief description (for listings)"
-//           />
-//         </div>
-
-//         <div className="form-row">
-//           <div className="form-group">
-//             <label>Category</label>
-//             <select
-//               name="category"
-//               value={form.category}
-//               onChange={handleChange}
-//             >
-//               <option value="">Select Category</option>
-//               {categoriesLoading ? (
-//                 <option disabled>Loading categories...</option>
-//               ) : (
-//                 categories.map((cat) => (
-//                   <option key={cat._id} value={cat._id}>
-//                     {cat.name}
-//                   </option>
-//                 ))
-//               )}
-//             </select>
-//           </div>
-//           <div className="form-group">
-//             <label>Commission (%)</label>
-//             <input
-//               type="number"
-//               name="commission"
-//               value={form.commission}
-//               onChange={handleChange}
-//               placeholder="0"
-//               step="0.01"
-//               min="0"
-//               max="100"
-//             />
-//           </div>
-//         </div>
-
-//         {/* VARIANTS SECTION */}
-//         <div className="variants-section">
-//           <h3>Product Variants (City & Plan)</h3>
-//           <p className="variant-help-text">
-//             Create pricing combinations for different cities and plans
-//           </p>
-
-//           <div className="variant-form card">
-//             <div className="form-row">
-//               <div className="form-group">
-//                 <label>City *</label>
-//                 <select
-//                   name="city"
-//                   value={currentVariant.city}
-//                   onChange={handleVariantChange}
-//                 >
-//                   <option value="">Select City</option>
-//                   {citiesLoading ? (
-//                     <option disabled>Loading cities...</option>
-//                   ) : (
-//                     cities.map((city) => (
-//                       <option key={city._id} value={city._id}>
-//                         {city.name}
-//                       </option>
-//                     ))
-//                   )}
-//                 </select>
-//               </div>
-//               <div className="form-group">
-//                 <label>Plan *</label>
-//                 <select
-//                   name="plan"
-//                   value={currentVariant.plan}
-//                   onChange={handleVariantChange}
-//                 >
-//                   <option value="">Select Plan</option>
-//                   {plansLoading ? (
-//                     <option disabled>Loading plans...</option>
-//                   ) : (
-//                     plans.map((plan) => (
-//                       <option key={plan._id} value={plan._id}>
-//                         {plan.name}
-//                       </option>
-//                     ))
-//                   )}
-//                 </select>
-//               </div>
-//             </div>
-
-//             <div className="form-row">
-//               <div className="form-group">
-//                 <label>Price (₹) *</label>
-//                 <input
-//                   type="number"
-//                   name="price"
-//                   value={currentVariant.price}
-//                   onChange={handleVariantChange}
-//                   placeholder="0.00"
-//                   step="0.01"
-//                   min="0"
-//                 />
-//               </div>
-//               <div className="form-group">
-//                 <label>Sale Price (₹)</label>
-//                 <input
-//                   type="number"
-//                   name="salePrice"
-//                   value={currentVariant.salePrice}
-//                   onChange={handleVariantChange}
-//                   placeholder="0.00 (optional)"
-//                   step="0.01"
-//                   min="0"
-//                 />
-//               </div>
-//             </div>
-
-//             <div className="form-group checkbox-group">
-//               <label>
-//                 <input
-//                   type="checkbox"
-//                   name="isAvailable"
-//                   checked={currentVariant.isAvailable}
-//                   onChange={handleVariantChange}
-//                 />
-//                 Available
-//               </label>
-//             </div>
-
-//             <button
-//               type="button"
-//               className="btn-add-variant"
-//               onClick={addVariant}
-//             >
-//               <Plus size={18} /> Add Variant
-//             </button>
-//           </div>
-
-//           {/* VARIANTS LIST */}
-//           {form.variants.length > 0 && (
-//             <div className="variants-list">
-//               <h4>Added Variants ({form.variants.length})</h4>
-//               <table className="variants-table">
-//                 <thead>
-//                   <tr>
-//                     <th>City</th>
-//                     <th>Plan</th>
-//                     <th>Price</th>
-//                     <th>Sale Price</th>
-//                     <th>Available</th>
-//                     <th>Action</th>
-//                   </tr>
-//                 </thead>
-//                 <tbody>
-//                   {form.variants.map((variant, index) => {
-//                     const cityName =
-//                       cities.find((c) => c._id === variant.city)?.name || "—";
-//                     const planName =
-//                       plans.find((p) => p._id === variant.plan)?.name || "—";
-//                     return (
-//                       <tr key={index}>
-//                         <td>{cityName}</td>
-//                         <td>{planName}</td>
-//                         <td>₹{variant.price.toFixed(2)}</td>
-//                         <td>
-//                           {variant.salePrice
-//                             ? `₹${variant.salePrice.toFixed(2)}`
-//                             : "—"}
-//                         </td>
-//                         <td>{variant.isAvailable ? "Yes" : "No"}</td>
-//                         <td>
-//                           <button
-//                             type="button"
-//                             className="btn-remove-variant"
-//                             onClick={() => removeVariant(index)}
-//                           >
-//                             <Trash2 size={16} />
-//                           </button>
-//                         </td>
-//                       </tr>
-//                     );
-//                   })}
-//                 </tbody>
-//               </table>
-//             </div>
-//           )}
-//         </div>
-
-//         <div className="form-group">
-//           <label>Product Image</label>
-//           <div className="image-upload">
-//             {form.images.length > 0 ? (
-//               <div className="image-preview">
-//                 <img src={form.images[0].url} alt="Preview" />
-//                 <button
-//                   type="button"
-//                   onClick={() => setForm((prev) => ({ ...prev, images: [] }))}
-//                   className="btn-remove"
-//                 >
-//                   ✕
-//                 </button>
-//               </div>
-//             ) : (
-//               <label className="upload-label">
-//                 <Upload size={24} />
-//                 <span>Click to upload image</span>
-//                 <input
-//                   type="file"
-//                   accept="image/*"
-//                   onChange={handleImageChange}
-//                   style={{ display: "none" }}
-//                 />
-//               </label>
-//             )}
-//           </div>
-//         </div>
-
-//         <div className="form-actions">
-//           <button
-//             type="button"
-//             className="btn-secondary"
-//             onClick={() => navigate("/vendor/products/all")}
-//           >
-//             Cancel
-//           </button>
-//           <button type="submit" className="btn-primary" disabled={loading}>
-//             {loading ? "Adding..." : "Add Product"}
-//           </button>
-//         </div>
-//       </form>
-//     </div>
-//   );
-// }
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -480,7 +11,10 @@ import {
   MapPin,
   CheckCircle2,
   AlertTriangle,
+  FileSpreadsheet,
+  Download
 } from "lucide-react";
+import * as XLSX from "xlsx";
 import toast from "react-hot-toast";
 import axios from "axios";
 import RichTextEditor from "../../components/RichTextEditor";
@@ -635,6 +169,102 @@ export default function VendorAddProductPage() {
     }
 
     setCurrentVariant(updatedVariant);
+  };
+
+  const handleExcelImport = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target.result;
+        const wb = XLSX.read(bstr, { type: "binary" });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws);
+
+        if (data.length === 0) {
+          toast.error("Excel file is empty");
+          return;
+        }
+
+        const newVariants = [];
+        const errors = [];
+
+        data.forEach((row, index) => {
+          const zone = String(row.Zone || row.zone || "").toLowerCase().trim();
+          const planName = String(row.Plan || row.plan || "").trim();
+          const price = parseFloat(row.Price || row.price);
+          const salePrice = row.SalePrice || row.saleprice ? parseFloat(row.SalePrice || row.saleprice) : null;
+
+          // Validate Zone
+          const validZones = ["basecity", "north", "south", "east", "west", "virtual"];
+          if (!validZones.includes(zone)) {
+            errors.push(`Row ${index + 2}: Invalid zone "${zone}"`);
+            return;
+          }
+
+          // Find Plan
+          const plan = plans.find(p => p.name.toLowerCase() === planName.toLowerCase());
+          if (!plan) {
+            errors.push(`Row ${index + 2}: Plan "${planName}" not found`);
+            return;
+          }
+
+          // Validate Price
+          if (isNaN(price)) {
+            errors.push(`Row ${index + 2}: Invalid price`);
+            return;
+          }
+
+          // Check for duplicate in newVariants
+          const exists = newVariants.some(v => v.zone === zone && v.plan === plan._id);
+          const existsInForm = form.variants.some(v => v.zone === zone && v.plan === plan._id);
+          
+          if (!exists && !existsInForm) {
+            newVariants.push({
+              zone,
+              city: zone === "basecity" ? vendorData?.baseCity : null,
+              plan: plan._id,
+              price,
+              salePrice,
+              isAvailable: true
+            });
+          }
+        });
+
+        if (newVariants.length > 0) {
+          setForm(prev => ({
+            ...prev,
+            variants: [...prev.variants, ...newVariants]
+          }));
+          toast.success(`Successfully imported ${newVariants.length} variants!`);
+        }
+
+        if (errors.length > 0) {
+          console.error("Import Errors:", errors);
+          toast.error(`${errors.length} rows skipped due to errors. Check console.`);
+        }
+      } catch (err) {
+        console.error("Excel Error:", err);
+        toast.error("Failed to parse Excel file");
+      }
+    };
+    reader.readAsBinaryString(file);
+    e.target.value = null; // Reset input
+  };
+
+  const downloadTemplate = () => {
+    const templateData = [
+      { Zone: "basecity", Plan: plans[0]?.name || "Diamond", Price: 1000, SalePrice: 800 },
+      { Zone: "north", Plan: plans[1]?.name || "Gold", Price: 1500, SalePrice: 1200 },
+      { Zone: "virtual", Plan: "Base", Price: 500, SalePrice: "" }
+    ];
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "VariantsTemplate");
+    XLSX.writeFile(wb, "Product_Variants_Template.xlsx");
   };
 
   const addVariant = () => {
@@ -1048,6 +678,15 @@ export default function VendorAddProductPage() {
                 Set pricing per zone and subscription plan
               </p>
             </div>
+            <div className="section-header-actions">
+              <button type="button" className="btn-outline-xs" onClick={downloadTemplate} title="Download Excel Template">
+                <Download size={13} /> Template
+              </button>
+              <label className="btn-primary-xs">
+                <FileSpreadsheet size={13} /> Import Excel
+                <input type="file" accept=".xlsx, .xls" onChange={handleExcelImport} style={{ display: 'none' }} />
+              </label>
+            </div>
           </div>
           <div className="section-body">
             {/* ADD VARIANT PANEL */}
@@ -1082,7 +721,10 @@ export default function VendorAddProductPage() {
                     name="zone"
                     value={currentVariant.zone}
                     onChange={handleVariantChange}
-                    disabled={!currentVariant.plan}
+                    disabled={
+                      !currentVariant.plan || 
+                      plans.find(p => p._id === currentVariant.plan)?.name?.toLowerCase() === "base"
+                    }
                   >
                     <option value="">Select zone</option>
                     {ZONE_OPTIONS.map((zone) => (
