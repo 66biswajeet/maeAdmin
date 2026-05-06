@@ -111,6 +111,8 @@ export const updateFooterColumn = (columnId, data) =>
   API.patch(`/site-settings/footer/columns/${columnId}`, data);
 export const deleteFooterColumn = (columnId) =>
   API.delete(`/site-settings/footer/columns/${columnId}`);
+export const updateBillTemplate = (data) =>
+  API.patch("/site-settings/bill-template", data);
 // ── Categories ─────────────────────────────────────────────────────────────
 export const getAdminCategories = () => API.get("/categories/admin/all");
 export const getPublicCategories = () => API.get("/categories?isActive=true");

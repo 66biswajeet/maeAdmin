@@ -85,6 +85,7 @@ const navItems = [
     children: [
       { label: "Site Settings", path: "/settings/site" },
       { label: "Meta Settings", path: "/settings/meta" },
+      { label: "Bill Template", path: "/settings/bill-template" },
       { label: "Email Templates", path: "/settings/email-templates" },
       { label: "Profile Settings", path: "/settings/profile" },
     ],

@@ -9,8 +9,10 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
+  IndianRupee,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { getVendorMe } from "../../services/api";
 
 export default function VendorDashboard() {
   const [vendor, setVendor] = useState(null);
@@ -18,22 +20,28 @@ export default function VendorDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const vendorData = localStorage.getItem("vendor");
-    const vendorToken = localStorage.getItem("vendorToken");
+    loadData();
+  }, [navigate]);
 
-    if (!vendorToken || !vendorData) {
+  const loadData = async () => {
+    const vendorToken = localStorage.getItem("vendorToken");
+    if (!vendorToken) {
       navigate("/vendor/login");
       return;
     }
+    setLoading(true);
     try {
-      setVendor(JSON.parse(vendorData));
-    } catch {
-      toast.error("Invalid session");
+      const res = await getVendorMe();
+      setVendor(res.data);
+      // Update local storage with fresh data too
+      localStorage.setItem("vendor", JSON.stringify(res.data));
+    } catch (err) {
+      toast.error("Session expired or invalid");
       navigate("/vendor/login");
     } finally {
       setLoading(false);
     }
-  }, [navigate]);
+  };
 
   if (loading) {
     return (
@@ -56,7 +64,7 @@ export default function VendorDashboard() {
     {
       icon: ShoppingCart,
       label: "Total Orders",
-      value: "0",
+      value: vendor.totalOrders ?? 0,
       color: "var(--navy-border)",
       bg: "rgba(30,59,134,0.08)",
     },
@@ -69,10 +77,24 @@ export default function VendorDashboard() {
     },
     {
       icon: BarChart3,
-      label: "Revenue",
-      value: `₹${(vendor.totalRevenue ?? 0).toLocaleString("en-IN")}`,
+      label: "Gross Revenue",
+      value: `₹${(vendor.grossRevenue ?? 0).toLocaleString("en-IN")}`,
       color: "#8b5cf6",
       bg: "rgba(139,92,246,0.08)",
+    },
+    {
+      icon: TrendingUp,
+      label: "Commission",
+      value: `₹${(vendor.adminCommission ?? 0).toLocaleString("en-IN")}`,
+      color: "#ec4899",
+      bg: "rgba(236,72,153,0.08)",
+    },
+    {
+      icon: IndianRupee,
+      label: "Net Earnings",
+      value: `₹${(vendor.totalRevenue ?? 0).toLocaleString("en-IN")}`,
+      color: "#10b981",
+      bg: "rgba(16,185,129,0.08)",
     },
   ];
 

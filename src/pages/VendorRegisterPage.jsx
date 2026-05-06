@@ -15,6 +15,8 @@ import {
   Search,
   Loader,
   X,
+  Info,
+  ExternalLink,
 } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -41,7 +43,9 @@ export default function VendorRegisterPage() {
     companyName: "",
     phone: "",
     baseCity: "",
+    interestedPlan: "Startup / Promotion Plan",
   });
+  const [showSubscriptionInfo, setShowSubscriptionInfo] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -101,20 +105,23 @@ export default function VendorRegisterPage() {
 
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
-  const handleCitySearch = async (input) => {
-    setCitySearchInput(input);
+  const triggerCitySearch = async () => {
+    const input = citySearchInput || form.baseCity;
     setCitySearchError("");
 
-    if (input.length < 2) {
+    if (!input || input.length < 2) {
+      setCitySearchError("Enter at least 2 characters");
       setCitySearchResults([]);
       return;
     }
 
     setCitySearchLoading(true);
+    setShowCityDropdown(false);
     try {
       const result = await searchCities(input);
       if (result.success) {
         setCitySearchResults(result.cities);
+        setShowCityDropdown(true);
       } else {
         setCitySearchError(result.error || "No cities found");
         setCitySearchResults([]);
@@ -174,6 +181,7 @@ export default function VendorRegisterPage() {
         companyName: form.companyName,
         phone: form.phone,
         baseCity: form.baseCity,
+        interestedPlan: form.interestedPlan,
       });
       setSuccess(true);
     } catch (err) {
@@ -402,25 +410,32 @@ export default function VendorRegisterPage() {
                         />
                         <input
                           type="text"
-                          placeholder="Search by city name or pincode..."
-                          value={form.baseCity || citySearchInput}
-                          onChange={(e) => handleCitySearch(e.target.value)}
+                          placeholder="Enter city name or pincode..."
+                          value={citySearchInput}
+                          onChange={(e) => setCitySearchInput(e.target.value)}
                           onFocus={() => {
                             if (citySearchResults.length > 0)
                               setShowCityDropdown(true);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              triggerCitySearch();
+                            }
                           }}
                           style={{
                             paddingLeft: "32px",
                             width: "100%",
                           }}
                         />
-                        {form.baseCity && (
+                        {(form.baseCity || citySearchInput) && (
                           <button
                             type="button"
                             onClick={() => {
                               set("baseCity", "");
                               setCitySearchInput("");
                               setCitySearchResults([]);
+                              setShowCityDropdown(false);
                             }}
                             style={{
                               position: "absolute",
@@ -437,15 +452,40 @@ export default function VendorRegisterPage() {
                           </button>
                         )}
                       </div>
-                      {citySearchLoading && (
-                        <Loader
-                          size={16}
-                          style={{
-                            animation: "spin 1s linear infinite",
-                          }}
-                        />
-                      )}
+                      <button 
+                        type="button"
+                        className="vr-btn vr-btn--teal btn-city-search"
+                        onClick={triggerCitySearch}
+                        disabled={citySearchLoading}
+                        style={{
+                          padding: '0 15px',
+                          height: '42px',
+                          fontSize: '13px',
+                          borderRadius: '8px',
+                          backgroundColor: '#2d5be3',
+                          color: 'white',
+                          border: 'none',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontWeight: '600'
+                        }}
+                      >
+                        {citySearchLoading ? (
+                          <Loader size={14} className="spin" />
+                        ) : (
+                          <Search size={14} />
+                        )}
+                        Search
+                      </button>
                     </div>
+                    {form.baseCity && !citySearchInput && (
+                      <div style={{ fontSize: '12px', color: '#059669', marginTop: '6px', fontWeight: '600' }}>
+                        Selected: {form.baseCity}
+                      </div>
+                    )}
+
 
                     {/* City search results dropdown */}
                     {showCityDropdown && citySearchResults.length > 0 && (
@@ -519,6 +559,30 @@ export default function VendorRegisterPage() {
                     )}
                   </div>
                 </div>
+
+                <div className="vr-fg">
+                  <label>
+                    Partnership Plan Preference <span>*</span>
+                  </label>
+                  <select
+                    value={form.interestedPlan}
+                    onChange={(e) => set("interestedPlan", e.target.value)}
+                    className="vr-select"
+                  >
+                    <option value="Diamond Partner">Diamond Partner (₹1,50,000)</option>
+                    <option value="Gold Partner">Gold Partner (₹75,000)</option>
+                    <option value="Silver Partner">Silver Partner (₹50,000)</option>
+                    <option value="Startup / Promotion Plan">Startup / Promotion Plan (Free)</option>
+                  </select>
+                  <button 
+                    type="button" 
+                    className="vr-info-link"
+                    onClick={() => setShowSubscriptionInfo(true)}
+                  >
+                    <Info size={14} /> Know more about subscriptions
+                  </button>
+                </div>
+
                 <div className="vr-notice">
                   <Shield size={14} />
                   <span>
@@ -553,6 +617,69 @@ export default function VendorRegisterPage() {
           </div>
         </div>
       </div>
+
+      {/* Subscription Info Modal */}
+      {showSubscriptionInfo && (
+        <div className="vr-modal-overlay">
+          <div className="vr-modal">
+            <div className="vr-modal-header">
+              <h3>Partnership & Commercial Plans</h3>
+              <button onClick={() => setShowSubscriptionInfo(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="vr-modal-body">
+              <div className="plan-promo">
+                Grow Risk-Free with Our Partnership Tiers. Sign up for a Diamond, Gold, or Silver Partnership today and take advantage of our 100% No-Lead Refund Guarantee. If our platform doesn't generate a lead for you within the first 12 months, we'll return your subscription fee in full.
+              </div>
+              
+              <div className="plan-table-wrapper">
+                <table className="plan-table">
+                  <thead>
+                    <tr>
+                      <th>Plan Name</th>
+                      <th>Original Subscription Fee</th>
+                      <th>Offer Price</th>
+                      <th>Commission Rate</th>
+                      <th>Validity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Diamond Partner</strong></td>
+                      <td>₹3,00,000</td>
+                      <td>₹1,50,000</td>
+                      <td>10%</td>
+                      <td>12 Months</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Gold Partner</strong></td>
+                      <td>₹1,50,000</td>
+                      <td>₹75,000</td>
+                      <td>20%</td>
+                      <td>12 Months</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Silver Partner</strong></td>
+                      <td>₹1,00,000</td>
+                      <td>₹50,000</td>
+                      <td>30%</td>
+                      <td>12 Months</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Startup / Promotion Plan</strong></td>
+                      <td>₹25,000</td>
+                      <td>Free (Limited Offer)</td>
+                      <td>42%</td>
+                      <td>12 Months</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

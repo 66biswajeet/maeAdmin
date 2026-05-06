@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Building2,
   Mail,
@@ -12,9 +13,16 @@ import {
   CheckCircle,
   ShieldCheck,
   Filter,
+  Eye,
+  Shield,
+  Calendar,
+  X,
+  MapPin,
+  FileText,
 } from "lucide-react";
 import API from "../services/api";
 import toast from "react-hot-toast";
+import Modal from "../components/ui/Modal";
 import "./VendorsPage.css";
 
 const STATUS_CONFIG = {
@@ -35,6 +43,11 @@ export default function VendorsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatus] = useState("all");
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "list"
+  const navigate = useNavigate();
+  const [selectedVendor, setSelectedVendor] = useState(null);
+  const [editingPlan, setEditingPlan] = useState("");
+  const [editingCommission, setEditingCommission] = useState(0);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     fetchVendors();
@@ -81,6 +94,10 @@ export default function VendorsPage() {
       .map((w) => w[0])
       .join("")
       .toUpperCase();
+
+  const handleViewDetails = (vendor) => {
+    navigate(`/vendors/details/${vendor._id}`);
+  };
 
   return (
     <div className="vp-page">
@@ -307,14 +324,14 @@ export default function VendorsPage() {
                       <span className="vp-card__stat-lbl">Revenue</span>
                     </div>
                   </div>
-                  <p className="vp-card__date">
-                    Joined{" "}
-                    {new Date(vendor.createdAt).toLocaleDateString("en-IN", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </p>
+                  <div className="vp-card__actions">
+                    <button 
+                      className="vp-card__btn vp-card__btn--view"
+                      onClick={() => handleViewDetails(vendor)}
+                    >
+                      <Eye size={13} /> View Profile
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -336,6 +353,7 @@ export default function VendorsPage() {
                   "Revenue",
                   "Status",
                   "Joined",
+                  "Actions",
                 ].map((h) => (
                   <th key={h}>{h}</th>
                 ))}
@@ -393,6 +411,15 @@ export default function VendorsPage() {
                         year: "numeric",
                       })}
                     </td>
+                    <td>
+                        <button 
+                          className="vp-action-btn" 
+                          title="View Details"
+                          onClick={() => handleViewDetails(vendor)}
+                        >
+                          <Eye size={14} />
+                        </button>
+                    </td>
                   </tr>
                 );
               })}
@@ -400,6 +427,8 @@ export default function VendorsPage() {
           </table>
         </div>
       )}
+
+      {/* Vendor Details Modal removed in favor of full page view */}
     </div>
   );
 }

@@ -49,11 +49,7 @@ function stripHtml(html) {
 /* ── Status badge ─────────────────────────────────────────────── */
 function StatusBadge({ status }) {
   if (!status)
-    return (
-      <span className="status-badge status-badge--pending">
-        —
-      </span>
-    );
+    return <span className="status-badge status-badge--pending">—</span>;
 
   const s = status.toLowerCase().replace(" ", "_");
   return (
@@ -69,9 +65,7 @@ function InfoRow({ label, value, mono }) {
   if (!value && value !== 0) return null;
   return (
     <div className="kv-row">
-      <span className="kv-row__key">
-        {label}
-      </span>
+      <span className="kv-row__key">{label}</span>
       <span className={`kv-row__val ${mono ? "kv-row__val--mono" : ""}`}>
         {String(value)}
       </span>
@@ -82,9 +76,7 @@ function InfoRow({ label, value, mono }) {
 /* ── Section card ─────────────────────────────────────────────── */
 function SectionCard({ title, icon, children, className = "" }) {
   return (
-    <div
-      className={`section-card ${className}`}
-    >
+    <div className={`section-card ${className}`}>
       <div className="section-card__title">
         {icon}
         {title}
@@ -126,9 +118,7 @@ function ItemCard({ it, bookingVendor, idx }) {
 
       {/* Meta */}
       <div className="item-card__meta">
-        <div className="item-card__title">
-          {title}
-        </div>
+        <div className="item-card__title">{title}</div>
         {desc && (
           <div className="item-card__desc">
             {desc.slice(0, 160)}
@@ -167,12 +157,8 @@ function ItemCard({ it, bookingVendor, idx }) {
 
       {/* Price */}
       <div className="item-card__price">
-        <div className="item-card__unit">
-          {fmt(it.unitPrice)}
-        </div>
-        <div className="item-card__qty">
-          × {it.quantity || 1}
-        </div>
+        <div className="item-card__unit">{fmt(it.unitPrice)}</div>
+        <div className="item-card__qty">× {it.quantity || 1}</div>
         <div className="item-card__total">
           {fmt((Number(it.unitPrice) || 0) * (Number(it.quantity) || 1))}
         </div>
@@ -235,7 +221,11 @@ export default function BookingDetail() {
             <div className="loader-dots__dot" />
             <div className="loader-dots__dot" />
           </div>
-          <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>Loading booking…</p>
+          <p
+            style={{ fontSize: "14px", color: "var(--text-muted)", margin: 0 }}
+          >
+            Loading booking…
+          </p>
         </div>
       </div>
     );
@@ -244,8 +234,15 @@ export default function BookingDetail() {
     return (
       <div className="booking-page">
         <div className="booking-state">
-          <Package size={40} style={{ color: 'var(--border-strong)', marginBottom: '12px' }} />
-          <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>Booking not found.</p>
+          <Package
+            size={40}
+            style={{ color: "var(--border-strong)", marginBottom: "12px" }}
+          />
+          <p
+            style={{ fontSize: "14px", color: "var(--text-muted)", margin: 0 }}
+          >
+            Booking not found.
+          </p>
           <button
             className="bd-btn bd-btn--secondary"
             onClick={() => navigate(-1)}
@@ -270,10 +267,7 @@ export default function BookingDetail() {
       <div className="booking-inner">
         {/* ── Nav ── */}
         <div className="bd-topbar">
-          <button
-            className="btn-back"
-            onClick={() => navigate(-1)}
-          >
+          <button className="btn-back" onClick={() => navigate(-1)}>
             <ArrowLeft size={15} />
             Back to Bookings
           </button>
@@ -311,33 +305,25 @@ export default function BookingDetail() {
                 Cancel
               </button>
             )}
-            {updating && (
-              <RefreshCw size={15} className="animate-spin" />
-            )}
+            {updating && <RefreshCw size={15} className="animate-spin" />}
           </div>
         </div>
 
         {/* ── Title + summary strip ── */}
         <div className="bd-headline">
-          <h2 className="booking-title">
-            Booking Details
-          </h2>
+          <h2 className="booking-title">Booking Details</h2>
           <StatusBadge status={booking.status} />
         </div>
 
         <div className="booking-summary">
           <div>
-            <div className="summary-field__label">
-              Booking ID
-            </div>
+            <div className="summary-field__label">Booking ID</div>
             <div className="summary-field__value summary-field__value--id">
               {booking._id}
             </div>
           </div>
           <div>
-            <div className="summary-field__label">
-              Order Ref
-            </div>
+            <div className="summary-field__label">Order Ref</div>
             <div className="summary-field__value summary-field__value--id">
               {typeof booking.order === "object"
                 ? booking.order?._id || "—"
@@ -345,17 +331,13 @@ export default function BookingDetail() {
             </div>
           </div>
           <div>
-            <div className="summary-field__label">
-              Created
-            </div>
+            <div className="summary-field__label">Created</div>
             <div className="summary-field__value">
               {fmtDate(booking.createdAt)}
             </div>
           </div>
           <div>
-            <div className="summary-field__label">
-              Last Updated
-            </div>
+            <div className="summary-field__label">Last Updated</div>
             <div className="summary-field__value">
               {fmtDate(booking.updatedAt)}
             </div>
@@ -373,7 +355,7 @@ export default function BookingDetail() {
               <InfoRow label="Phone" value={vendor.phone} />
               <InfoRow label="ID" value={vendor._id} mono />
               {!vendor._id && !vendor.name && !vendor.companyName && (
-                <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
+                <span style={{ color: "var(--text-muted)", fontSize: "13px" }}>
                   No vendor info
                 </span>
               )}
@@ -389,7 +371,7 @@ export default function BookingDetail() {
               <InfoRow label="Company" value={customer.companyName} />
               <InfoRow label="ID" value={customer._id} mono />
               {!customer._id && !customer.name && !customer.email && (
-                <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
+                <span style={{ color: "var(--text-muted)", fontSize: "13px" }}>
                   No customer info
                 </span>
               )}
@@ -410,27 +392,53 @@ export default function BookingDetail() {
               {booking.discount ? (
                 <div className="price-row">
                   <span className="price-row__label">Discount</span>
-                  <span className="price-row__amount" style={{ color: 'var(--teal)' }}>
+                  <span
+                    className="price-row__amount"
+                    style={{ color: "var(--teal)" }}
+                  >
                     -{fmt(booking.discount)}
                   </span>
                 </div>
               ) : null}
               {booking.tax !== undefined && (
-                <div className="price-row">
-                  <span className="price-row__label">Tax (GST)</span>
-                  <span className="price-row__amount">
-                    {fmt(booking.tax)}
-                  </span>
-                </div>
+                <>
+                  {booking.taxType && booking.taxType.includes("CGST") ? (
+                    <>
+                      <div className="price-row">
+                        <span className="price-row__label">CGST (9%)</span>
+                        <span className="price-row__amount">{fmt(booking.tax / 2)}</span>
+                      </div>
+                      <div className="price-row">
+                        <span className="price-row__label">SGST (9%)</span>
+                        <span className="price-row__amount">{fmt(booking.tax / 2)}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="price-row">
+                      <span className="price-row__label">{booking.taxType || "IGST (18%)"}</span>
+                      <span className="price-row__amount">{fmt(booking.tax)}</span>
+                    </div>
+                  )}
+                </>
               )}
               <div className="price-row price-row--total">
-                <span className="price-row__label">
-                  Total
-                </span>
-                <span className="price-row__amount">
-                  {fmt(booking.total)}
-                </span>
+                <span className="price-row__label">Total Order Amount</span>
+                <span className="price-row__amount">{fmt(booking.total)}</span>
               </div>
+
+              {/* Commission Breakdown (Internal/Vendor/Admin only) */}
+              {vendor.commissionPercentage !== undefined && (
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px dashed #eee' }}>
+                  <div className="price-row" style={{ fontSize: '12px', color: '#666' }}>
+                    <span className="price-row__label">Platform Commission ({vendor.commissionPercentage}%)</span>
+                    <span className="price-row__amount">-{fmt((booking.total * vendor.commissionPercentage) / 100)}</span>
+                  </div>
+                  <div className="price-row" style={{ fontSize: '14px', fontWeight: '700', color: 'var(--navy-border)', marginTop: 4 }}>
+                    <span className="price-row__label">Net Vendor Revenue</span>
+                    <span className="price-row__amount">{fmt(booking.total - (booking.total * vendor.commissionPercentage) / 100)}</span>
+                  </div>
+                </div>
+              )}
             </div>
           </SectionCard>
 
@@ -440,6 +448,22 @@ export default function BookingDetail() {
               {booking.notes || "No notes attached to this booking."}
             </p>
           </SectionCard>
+
+          {/* Billing Address */}
+          {booking.billingAddress && (
+            <SectionCard title="Billing Address" icon={<MapPin size={13} />}>
+              <div className="kv-list">
+                <InfoRow label="Name" value={`${booking.billingAddress.firstName} ${booking.billingAddress.lastName}`} />
+                <InfoRow label="Street" value={booking.billingAddress.streetAddress} />
+                <InfoRow label="Apt/Suite" value={booking.billingAddress.apartment} />
+                <InfoRow label="City" value={booking.billingAddress.city} />
+                <InfoRow label="State" value={booking.billingAddress.state} />
+                <InfoRow label="Pincode" value={booking.billingAddress.pincode} />
+                <InfoRow label="Phone" value={booking.billingAddress.phone} />
+                <InfoRow label="Email" value={booking.billingAddress.email} />
+              </div>
+            </SectionCard>
+          )}
         </div>
 
         {/* ── Items ── */}
@@ -449,7 +473,15 @@ export default function BookingDetail() {
           className="mb-0"
         >
           {(booking.items || []).length === 0 ? (
-            <div style={{ textAlign: 'center', paddingTop: '32px', paddingBottom: '32px', color: 'var(--text-muted)', fontSize: '13px' }}>
+            <div
+              style={{
+                textAlign: "center",
+                paddingTop: "32px",
+                paddingBottom: "32px",
+                color: "var(--text-muted)",
+                fontSize: "13px",
+              }}
+            >
               No items in this booking.
             </div>
           ) : (
@@ -471,18 +503,19 @@ export default function BookingDetail() {
       {toast && (
         <div
           style={{
-            position: 'fixed',
-            bottom: '24px',
-            right: '24px',
-            color: 'white',
-            padding: '8px 18px',
-            borderRadius: '8px',
-            fontSize: '13px',
-            fontWeight: '500',
-            boxShadow: 'var(--shadow-md)',
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            color: "white",
+            padding: "8px 18px",
+            borderRadius: "8px",
+            fontSize: "13px",
+            fontWeight: "500",
+            boxShadow: "var(--shadow-md)",
             zIndex: 300,
-            background: toast.type === 'success' ? 'var(--teal)' : 'var(--danger)',
-            animation: 'toastIn 0.25s ease',
+            background:
+              toast.type === "success" ? "var(--teal)" : "var(--danger)",
+            animation: "toastIn 0.25s ease",
           }}
         >
           {toast.msg}

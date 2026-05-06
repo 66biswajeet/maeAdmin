@@ -10,6 +10,7 @@ import {
   X,
   CheckCircle,
   AlertCircle,
+  Shield,
 } from "lucide-react";
 import {
   getVendorMe,
@@ -464,7 +465,34 @@ export default function VendorProfilePage() {
               </div>
             )}
           </div>
+
+          <div style={{ marginTop: 24, padding: 20, border: '1px solid #e5e7eb', borderRadius: 12, backgroundColor: '#f9fafb' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#1d3783' }}>
+              <Shield size={20} />
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Partnership Details</h3>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 16 }}>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: '#666', textTransform: 'uppercase' }}>Current Plan</label>
+                <div style={{ marginTop: 4, fontSize: 16, fontWeight: 800, color: '#111' }}>
+                  {vendor.interestedPlan || "Startup / Promotion Plan"}
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: '#666', textTransform: 'uppercase' }}>Commission Rate</label>
+                <div style={{ marginTop: 4, fontSize: 16, fontWeight: 800, color: '#111' }}>
+                  {vendor.commissionPercentage || 0}%
+                </div>
+              </div>
+            </div>
+
+            <p style={{ marginTop: 12, fontSize: 12, color: '#666', margin: 0 }}>
+              These are your active partnership terms. To request changes, please contact the Make Audit Easy administrator.
+            </p>
+          </div>
         </section>
+
 
         {/* Save Button */}
         <div className="profile-actions">

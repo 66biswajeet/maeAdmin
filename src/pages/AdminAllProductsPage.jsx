@@ -29,6 +29,8 @@ export default function AdminAllProductsPage() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [cities, setCities] = useState([]);
   const [plans, setPlans] = useState([]);
+  const [vendors, setVendors] = useState([]);
+  const [vendorFilter, setVendorFilter] = useState("");
 
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
@@ -40,6 +42,7 @@ export default function AdminAllProductsPage() {
         headers: { Authorization: `Bearer ${token}` },
         params: {
           status: statusFilter || undefined,
+          vendor: vendorFilter || undefined,
           search,
           page,
           limit: 20,
@@ -53,21 +56,25 @@ export default function AdminAllProductsPage() {
     } finally {
       setLoading(false);
     }
-  }, [token, search, page, statusFilter]);
+  }, [token, search, page, statusFilter, vendorFilter]);
 
   useEffect(() => {
     fetchProducts();
     // Fetch cities and plans for variant display
     const fetchMetadata = async () => {
       try {
-        const [citiesRes, plansRes] = await Promise.all([
+        const [citiesRes, plansRes, vendorsRes] = await Promise.all([
           axios.get(`${API_BASE}/cities`),
           axios.get(`${API_BASE}/plans`),
+          axios.get(`${API_BASE}/vendors`, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
         ]);
         setCities(citiesRes.data.cities || citiesRes.data || []);
         setPlans(plansRes.data.plans || plansRes.data || []);
+        setVendors(vendorsRes.data.vendors || []);
       } catch (err) {
-        console.error("Failed to fetch cities/plans", err);
+        console.error("Failed to fetch metadata", err);
       }
     };
     fetchMetadata();
@@ -210,6 +217,23 @@ export default function AdminAllProductsPage() {
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
           <option value="pending">Pending</option>
+        </select>
+
+        <select
+          value={vendorFilter}
+          onChange={(e) => {
+            setVendorFilter(e.target.value);
+            setPage(1);
+          }}
+          className="status-filter"
+          style={{ minWidth: "160px" }}
+        >
+          <option value="">All Vendors</option>
+          {vendors.map(v => (
+            <option key={v._id} value={v._id}>
+              {v.companyName || v.name}
+            </option>
+          ))}
         </select>
 
         <button className="btn-refresh" onClick={fetchProducts} title="Refresh">

@@ -37,7 +37,7 @@ export default function Login() {
       localStorage.setItem("token", token);
       localStorage.setItem("admin", JSON.stringify(admin));
       toast.success(`Welcome back, ${admin.name}!`);
-      navigate("/");
+      navigate("/dashboard");
     } catch (err) {
       toast.error(err.response?.data?.message || "Login failed");
     } finally {

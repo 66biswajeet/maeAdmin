@@ -3,11 +3,13 @@ import { Toaster } from "react-hot-toast";
 import AdminLayout from "./components/layout/AdminLayout";
 import VendorLayout from "./layouts/VendorLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import VendorProtectedRoute from "./components/VendorProtectedRoute";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import SiteSettingsPage from "./pages/SiteSettings";
 import ProfileSettings from "./pages/ProfileSettings";
 import MetaSettingsPage from "./pages/MetaSettings";
+import BillTemplatePage from "./pages/BillTemplatePage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import CitiesPage from "./pages/CitiesPage";
@@ -32,6 +34,8 @@ import VendorBookingsPage from "./pages/vendor/VendorBookingsPage";
 import BookingDetail from "./pages/BookingDetail";
 import VendorBookingDetail from "./pages/BookingDetail";
 import EmailTemplatesPage from "./pages/EmailTemplatesPage";
+import AdminVendorDetailsPage from "./pages/AdminVendorDetailsPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
 
 import "./App.css";
 
@@ -73,7 +77,13 @@ export default function App() {
         <Route path="/vendor/register" element={<VendorRegisterPage />} />
 
         {/* Protected Vendor Routes */}
-        <Route element={<VendorLayout />}>
+        <Route 
+          element={
+            <VendorProtectedRoute>
+              <VendorLayout />
+            </VendorProtectedRoute>
+          }
+        >
           <Route path="/vendor/dashboard" element={<VendorDashboard />} />
           <Route path="/vendor/products/all" element={<VendorProductsPage />} />
           <Route
@@ -119,14 +129,15 @@ export default function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="/settings/site" replace />} />
-          <Route path="dashboard" element={<PlaceholderPage />} />
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboardPage />} />
           <Route path="catalog/categories" element={<CategoriesPage />} />
           <Route path="catalog/cities" element={<CitiesPage />} />
           <Route path="catalog/plans" element={<PlansPage />} />
           <Route path="catalog/empanelments" element={<EmpanelmentPage />} />
           <Route path="vendors/all" element={<VendorsPage />} />
           <Route path="vendors/requests" element={<VendorRequestsPage />} />
+          <Route path="vendors/details/:id" element={<AdminVendorDetailsPage />} />
           <Route path="vendors" element={<VendorsPage />} />
           <Route path="staff/all" element={<StaffPage />} />
           <Route path="staff/requests" element={<StaffRequestsPage />} />
@@ -150,6 +161,7 @@ export default function App() {
           <Route path="bookings/:id" element={<BookingDetail />} />
           <Route path="settings/site" element={<SiteSettingsPage />} />
           <Route path="settings/meta" element={<MetaSettingsPage />} />
+          <Route path="settings/bill-template" element={<BillTemplatePage />} />
           <Route path="settings/email-templates" element={<EmailTemplatesPage />} />
           <Route path="settings/profile" element={<ProfileSettings />} />
           <Route path="*" element={<Navigate to="/settings/site" replace />} />

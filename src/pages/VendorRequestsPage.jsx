@@ -18,6 +18,7 @@ import {
   Check,
   X,
   MapPin,
+  Shield,
 } from "lucide-react";
 import {
   getVendorEditRequests,
@@ -50,6 +51,8 @@ export default function VendorRequestsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [selected, setSelected] = useState(null);
+  const [editingPlan, setEditingPlan] = useState("");
+  const [editingCommission, setEditingCommission] = useState(0);
   const [actionLoading, setActionLoading] = useState("");
 
   const loadEditRequests = async () => {
@@ -626,13 +629,17 @@ export default function VendorRequestsPage() {
                                 flexWrap: "wrap",
                               }}
                             >
-                              <button
-                                className="btn btn-ghost btn-sm"
-                                style={{ fontSize: 11, padding: "3px 8px" }}
-                                onClick={() => setSelected(vendor)}
-                              >
-                                <Eye size={11} /> View
-                              </button>
+                                <button
+                                  className="btn btn-ghost btn-sm"
+                                  style={{ fontSize: 11, padding: "3px 8px" }}
+                                  onClick={() => {
+                                    setSelected(vendor);
+                                    setEditingPlan(vendor.interestedPlan || "Startup / Promotion Plan");
+                                    setEditingCommission(vendor.commissionPercentage || 0);
+                                  }}
+                                >
+                                  <Eye size={11} /> View
+                                </button>
 
                               {vendor.status !== "approved" &&
                                 vendor.status !== "active" && (
@@ -847,12 +854,14 @@ export default function VendorRequestsPage() {
                     },
                     { icon: Mail, label: "Email", value: selected.email },
                     {
-                      icon: Calendar,
-                      label: "Applied",
-                      value: new Date(selected.createdAt).toLocaleDateString(
-                        "en-IN",
-                        { dateStyle: "long" },
-                      ),
+                      icon: Shield,
+                      label: "Interested Plan",
+                      value: editingPlan || selected.interestedPlan || "Startup / Promotion Plan",
+                    },
+                    {
+                      icon: FileText,
+                      label: "Commission (%)",
+                      value: `${editingCommission || selected.commissionPercentage || 0}%`,
                     },
                   ].map(({ icon: Icon, label, value }) => (
                     <div
@@ -889,7 +898,60 @@ export default function VendorRequestsPage() {
                       </span>
                     </div>
                   ))}
+
+                  {/* Plan Editor */}
+                  <div style={{ marginTop: 10, padding: '12px', border: '1px dashed var(--border)', borderRadius: 8 }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 8, textTransform: 'uppercase' }}>
+                      Adjust Partnership Plan (Admin Only)
+                    </label>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <select 
+                        className="fi"
+                        style={{ fontSize: 13, flex: 1 }}
+                        value={editingPlan}
+                        onChange={(e) => {
+                          const newPlan = e.target.value;
+                          setEditingPlan(newPlan);
+                          // Auto-update commission based on plan
+                          const commissions = {
+                            "Diamond Partner": 10,
+                            "Gold Partner": 20,
+                            "Silver Partner": 30,
+                            "Startup / Promotion Plan": 42
+                          };
+                          if (commissions[newPlan]) {
+                            setEditingCommission(commissions[newPlan]);
+                          }
+                        }}
+                      >
+                        <option value="Diamond Partner">Diamond Partner</option>
+                        <option value="Gold Partner">Gold Partner</option>
+                        <option value="Silver Partner">Silver Partner</option>
+                        <option value="Startup / Promotion Plan">Startup / Promotion Plan</option>
+                      </select>
+                      <button 
+                        className="btn btn-sm btn-teal"
+                        disabled={editingPlan === selected.interestedPlan || !!actionLoading}
+                        onClick={async () => {
+                          setActionLoading("updatePlan");
+                          try {
+                            await API.patch(`/vendors/${selected._id}`, { interestedPlan: editingPlan });
+                            toast.success("Plan updated");
+                            setSelected({ ...selected, interestedPlan: editingPlan });
+                            setVendors(prev => prev.map(v => v._id === selected._id ? { ...v, interestedPlan: editingPlan } : v));
+                          } catch (err) {
+                            toast.error("Failed to update plan");
+                          } finally {
+                            setActionLoading("");
+                          }
+                        }}
+                      >
+                        <Check size={14} /> Update
+                      </button>
+                    </div>
+                  </div>
                 </div>
+
 
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {selected.status !== "approved" &&
