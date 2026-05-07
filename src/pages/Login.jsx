@@ -95,7 +95,6 @@ export default function Login() {
             <div className="form-group">
               <label htmlFor="email">Email Address</label>
               <div className="input-wrapper">
-                <Mail size={16} className="input-icon" />
                 <input
                   id="email"
                   type="email"
@@ -112,7 +111,6 @@ export default function Login() {
             <div className="form-group">
               <label htmlFor="password">Password</label>
               <div className="input-wrapper">
-                <Lock size={16} className="input-icon" />
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}

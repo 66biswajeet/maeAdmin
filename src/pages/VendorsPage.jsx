@@ -20,7 +20,7 @@ import {
   MapPin,
   FileText,
 } from "lucide-react";
-import API from "../services/api";
+import API, { getEmpanelments } from "../services/api";
 import toast from "react-hot-toast";
 import Modal from "../components/ui/Modal";
 import "./VendorsPage.css";
@@ -45,12 +45,14 @@ export default function VendorsPage() {
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "list"
   const navigate = useNavigate();
   const [selectedVendor, setSelectedVendor] = useState(null);
+  const [empanelmentsMap, setEmpanelmentsMap] = useState({});
   const [editingPlan, setEditingPlan] = useState("");
   const [editingCommission, setEditingCommission] = useState(0);
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     fetchVendors();
+    loadEmpanelments();
   }, []);
 
   const fetchVendors = async () => {
@@ -62,6 +64,19 @@ export default function VendorsPage() {
       toast.error("Failed to load vendors");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadEmpanelments = async () => {
+    try {
+      const res = await getEmpanelments();
+      const map = {};
+      (res.data || []).forEach((e) => {
+        map[e._id] = e.empanelmentName || e.name || "";
+      });
+      setEmpanelmentsMap(map);
+    } catch (err) {
+      // non-fatal
     }
   };
 
@@ -260,6 +275,10 @@ export default function VendorsPage() {
           {filtered.map((vendor) => {
             const sc = STATUS_CONFIG[vendor.status] || STATUS_CONFIG.requested;
             const StatusIcon = sc.icon;
+            const empName =
+              vendor.empanelment && typeof vendor.empanelment === "object"
+                ? vendor.empanelment.empanelmentName || vendor.empanelment.name
+                : vendor.empanelmentName || empanelmentsMap[vendor.empanelment];
             return (
               <div key={vendor._id} className="vp-card">
                 {/* Card header stripe */}
@@ -302,6 +321,12 @@ export default function VendorsPage() {
                       <span>
                         <Phone size={11} />
                         {vendor.phone}
+                      </span>
+                    )}
+                    {empName && (
+                      <span>
+                        <MapPin size={11} />
+                        {empName}
                       </span>
                     )}
                   </div>
@@ -348,6 +373,7 @@ export default function VendorsPage() {
                 {[
                   "Vendor",
                   "Email",
+                  "Empanelment",
                   "Phone",
                   "Products",
                   "Revenue",
@@ -391,6 +417,7 @@ export default function VendorsPage() {
                       </div>
                     </td>
                     <td className="vp-list__cell">{vendor.email}</td>
+                    <td className="vp-list__cell">{empanelmentsMap[vendor.empanelment] || vendor.empanelmentName || (vendor.empanelment && vendor.empanelment.empanelmentName) || '—'}</td>
                     <td className="vp-list__cell">{vendor.phone || "—"}</td>
                     <td className="vp-list__cell vp-list__cell--center">
                       {vendor.totalProducts ?? 0}

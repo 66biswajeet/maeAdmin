@@ -44,7 +44,9 @@ export default function VendorRegisterPage() {
     phone: "",
     baseCity: "",
     interestedPlan: "Startup / Promotion Plan",
+    empanelment: "",
   });
+  const [empanelments, setEmpanelments] = useState([]);
   const [showSubscriptionInfo, setShowSubscriptionInfo] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -101,7 +103,17 @@ export default function VendorRegisterPage() {
     }
 
     setIsChecking(false);
+    fetchEmpanelments();
   }, [navigate]);
+
+  const fetchEmpanelments = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/empanelments`);
+      setEmpanelments(res.data);
+    } catch (err) {
+      console.error("Error fetching empanelments:", err);
+    }
+  };
 
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
@@ -171,6 +183,10 @@ export default function VendorRegisterPage() {
       setError("Base city/office location is required");
       return;
     }
+    if (!form.empanelment) {
+      setError("Empanelment is required");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
@@ -182,6 +198,7 @@ export default function VendorRegisterPage() {
         phone: form.phone,
         baseCity: form.baseCity,
         interestedPlan: form.interestedPlan,
+        empanelment: form.empanelment,
       });
       setSuccess(true);
     } catch (err) {
@@ -581,6 +598,24 @@ export default function VendorRegisterPage() {
                   >
                     <Info size={14} /> Know more about subscriptions
                   </button>
+                </div>
+
+                <div className="vr-fg">
+                  <label>
+                    Empanelment <span>*</span>
+                  </label>
+                  <select
+                    value={form.empanelment}
+                    onChange={(e) => set("empanelment", e.target.value)}
+                    className="vr-select"
+                  >
+                    <option value="">Select Empanelment</option>
+                    {empanelments.map((emp) => (
+                      <option key={emp._id} value={emp._id}>
+                        {emp.empanelmentName}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="vr-notice">

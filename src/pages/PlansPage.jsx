@@ -240,11 +240,11 @@ export default function PlansPage() {
 
             <div className="form-group">
               <label>Description</label>
-              <input
-                type="text"
+              <textarea
                 placeholder="e.g., For professional users"
                 value={form.description}
                 onChange={(e) => set("description", e.target.value)}
+                rows={3}
               />
             </div>
 

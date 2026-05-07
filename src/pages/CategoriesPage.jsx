@@ -19,6 +19,7 @@ import {
   updateCategory,
   deleteCategory,
 } from "../services/api";
+import { uploadToCloudinary } from "../services/cloudinaryService";
 import toast from "react-hot-toast";
 
 const EMPTY_FORM = {
@@ -112,19 +113,27 @@ export default function CategoriesPage() {
     }
     setSaving(true);
     try {
-      const fd = new FormData();
-      fd.append("name", form.name.trim());
-      fd.append("description", form.description);
-      fd.append("order", form.order);
-      fd.append("isActive", form.isActive);
-      if (form.parent) fd.append("parent", form.parent);
-      if (iconFile) fd.append("icon", iconFile);
+      let iconUrl = editing?.iconUrl || "";
+
+      if (iconFile) {
+        const res = await uploadToCloudinary(iconFile, "categories");
+        iconUrl = res.secure_url;
+      }
+
+      const payload = {
+        name: form.name.trim(),
+        description: form.description,
+        order: form.order,
+        isActive: form.isActive,
+        parent: form.parent || null,
+        iconUrl,
+      };
 
       if (editing) {
-        await updateCategory(editing._id, fd);
+        await updateCategory(editing._id, payload);
         toast.success("Category updated!");
       } else {
-        await createCategory(fd);
+        await createCategory(payload);
         toast.success("Category created!");
       }
       setShowModal(false);
@@ -154,9 +163,7 @@ export default function CategoriesPage() {
 
   const handleToggleActive = async (cat) => {
     try {
-      const fd = new FormData();
-      fd.append("isActive", !cat.isActive);
-      await updateCategory(cat._id, fd);
+      await updateCategory(cat._id, { isActive: !cat.isActive });
       toast.success(
         `"${cat.name}" ${!cat.isActive ? "activated" : "deactivated"}`,
       );

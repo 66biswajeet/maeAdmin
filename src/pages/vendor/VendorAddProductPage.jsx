@@ -12,7 +12,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   FileSpreadsheet,
-  Download
+  Download,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import toast from "react-hot-toast";
@@ -193,20 +193,34 @@ export default function VendorAddProductPage() {
         const errors = [];
 
         data.forEach((row, index) => {
-          const zone = String(row.Zone || row.zone || "").toLowerCase().trim();
+          const zone = String(row.Zone || row.zone || "")
+            .toLowerCase()
+            .trim();
           const planName = String(row.Plan || row.plan || "").trim();
           const price = parseFloat(row.Price || row.price);
-          const salePrice = row.SalePrice || row.saleprice ? parseFloat(row.SalePrice || row.saleprice) : null;
+          const salePrice =
+            row.SalePrice || row.saleprice
+              ? parseFloat(row.SalePrice || row.saleprice)
+              : null;
 
           // Validate Zone
-          const validZones = ["basecity", "north", "south", "east", "west", "virtual"];
+          const validZones = [
+            "basecity",
+            "north",
+            "south",
+            "east",
+            "west",
+            "virtual",
+          ];
           if (!validZones.includes(zone)) {
             errors.push(`Row ${index + 2}: Invalid zone "${zone}"`);
             return;
           }
 
           // Find Plan
-          const plan = plans.find(p => p.name.toLowerCase() === planName.toLowerCase());
+          const plan = plans.find(
+            (p) => p.name.toLowerCase() === planName.toLowerCase(),
+          );
           if (!plan) {
             errors.push(`Row ${index + 2}: Plan "${planName}" not found`);
             return;
@@ -219,9 +233,13 @@ export default function VendorAddProductPage() {
           }
 
           // Check for duplicate in newVariants
-          const exists = newVariants.some(v => v.zone === zone && v.plan === plan._id);
-          const existsInForm = form.variants.some(v => v.zone === zone && v.plan === plan._id);
-          
+          const exists = newVariants.some(
+            (v) => v.zone === zone && v.plan === plan._id,
+          );
+          const existsInForm = form.variants.some(
+            (v) => v.zone === zone && v.plan === plan._id,
+          );
+
           if (!exists && !existsInForm) {
             newVariants.push({
               zone,
@@ -229,22 +247,26 @@ export default function VendorAddProductPage() {
               plan: plan._id,
               price,
               salePrice,
-              isAvailable: true
+              isAvailable: true,
             });
           }
         });
 
         if (newVariants.length > 0) {
-          setForm(prev => ({
+          setForm((prev) => ({
             ...prev,
-            variants: [...prev.variants, ...newVariants]
+            variants: [...prev.variants, ...newVariants],
           }));
-          toast.success(`Successfully imported ${newVariants.length} variants!`);
+          toast.success(
+            `Successfully imported ${newVariants.length} variants!`,
+          );
         }
 
         if (errors.length > 0) {
           console.error("Import Errors:", errors);
-          toast.error(`${errors.length} rows skipped due to errors. Check console.`);
+          toast.error(
+            `${errors.length} rows skipped due to errors. Check console.`,
+          );
         }
       } catch (err) {
         console.error("Excel Error:", err);
@@ -256,11 +278,35 @@ export default function VendorAddProductPage() {
   };
 
   const downloadTemplate = () => {
-    const templateData = [
-      { Zone: "basecity", Plan: plans[0]?.name || "Diamond", Price: 1000, SalePrice: 800 },
-      { Zone: "north", Plan: plans[1]?.name || "Gold", Price: 1500, SalePrice: 1200 },
-      { Zone: "virtual", Plan: "Base", Price: 500, SalePrice: "" }
-    ];
+    const templateData = [];
+    const zones = ["basecity", "north", "south", "east", "west", "virtual"];
+
+    plans.forEach((plan) => {
+      const isBase = plan.name?.toLowerCase() === "base";
+
+      if (isBase) {
+        // Base plan is only for Virtual zone
+        templateData.push({
+          Zone: "virtual",
+          Plan: plan.name,
+          Price: 500,
+          SalePrice: 350,
+        });
+      } else {
+        // All other plans for all other zones
+        zones
+          .filter((z) => z !== "virtual")
+          .forEach((zone) => {
+            templateData.push({
+              Zone: zone,
+              Plan: plan.name,
+              Price: "",
+              SalePrice: "",
+            });
+          });
+      }
+    });
+
     const ws = XLSX.utils.json_to_sheet(templateData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "VariantsTemplate");
@@ -565,7 +611,15 @@ export default function VendorAddProductPage() {
               )}
 
               {/* Parent categories with collapsible subcategories */}
-              <div className="categories-accordion">
+              <div
+                className="categories-accordion"
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "8px",
+                  marginTop: "12px",
+                }}
+              >
                 {categoriesLoading ? (
                   <div className="loading-state">
                     <div className="spinner-mini"></div>
@@ -587,11 +641,34 @@ export default function VendorAddProductPage() {
                       );
                       const isExpanded = expandedCategories.has(parent._id);
                       return (
-                        <div key={parent._id} className="accordion-item">
+                        <div
+                          key={parent._id}
+                          className="accordion-item"
+                          style={{
+                            border: "1px solid #eef0f2",
+                            borderRadius: "10px",
+                            overflow: "hidden",
+                            backgroundColor: "#fff",
+                          }}
+                        >
                           <button
                             type="button"
                             className={`accordion-header ${isExpanded ? "expanded" : ""}`}
                             onClick={() => toggleParentCategory(parent._id)}
+                            style={{
+                              padding: "16px 20px",
+                              display: "flex",
+                              alignItems: "center",
+                              width: "100%",
+                              gap: "12px",
+                              background: isExpanded
+                                ? "linear-gradient(to right, #f8faff, #fff)"
+                                : "#fff",
+                              border: "none",
+                              cursor: "pointer",
+                              textAlign: "left",
+                              transition: "all 0.2s ease",
+                            }}
                           >
                             <span className="accordion-icon">
                               <svg
@@ -679,12 +756,22 @@ export default function VendorAddProductPage() {
               </p>
             </div>
             <div className="section-header-actions">
-              <button type="button" className="btn-outline-xs" onClick={downloadTemplate} title="Download Excel Template">
+              <button
+                type="button"
+                className="btn-outline-xs"
+                onClick={downloadTemplate}
+                title="Download Excel Template"
+              >
                 <Download size={13} /> Template
               </button>
               <label className="btn-primary-xs">
                 <FileSpreadsheet size={13} /> Import Excel
-                <input type="file" accept=".xlsx, .xls" onChange={handleExcelImport} style={{ display: 'none' }} />
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  onChange={handleExcelImport}
+                  style={{ display: "none" }}
+                />
               </label>
             </div>
           </div>
@@ -722,8 +809,10 @@ export default function VendorAddProductPage() {
                     value={currentVariant.zone}
                     onChange={handleVariantChange}
                     disabled={
-                      !currentVariant.plan || 
-                      plans.find(p => p._id === currentVariant.plan)?.name?.toLowerCase() === "base"
+                      !currentVariant.plan ||
+                      plans
+                        .find((p) => p._id === currentVariant.plan)
+                        ?.name?.toLowerCase() === "base"
                     }
                   >
                     <option value="">Select zone</option>
@@ -742,13 +831,13 @@ export default function VendorAddProductPage() {
                     Price <span className="label-required">*</span>
                   </label>
                   <div className="input-prefix-wrapper">
-                    <span className="input-prefix">₹</span>
+                    <span className="input-prefix"> </span>
                     <input
                       type="number"
                       name="price"
                       value={currentVariant.price}
                       onChange={handleVariantChange}
-                      placeholder="0.00"
+                      placeholder="₹ 0.00"
                       step="0.01"
                       min="0"
                     />
@@ -757,13 +846,13 @@ export default function VendorAddProductPage() {
                 <div className="form-group">
                   <label>Sale Price</label>
                   <div className="input-prefix-wrapper">
-                    <span className="input-prefix">₹</span>
+                    <span className="input-prefix"></span>
                     <input
                       type="number"
                       name="salePrice"
                       value={currentVariant.salePrice}
                       onChange={handleVariantChange}
-                      placeholder="Optional"
+                      placeholder="₹ 0.00"
                       step="0.01"
                       min="0"
                     />

@@ -17,6 +17,7 @@ import {
   updateVendorMe,
   createVendorEditRequest,
 } from "../../services/api";
+import { uploadToCloudinary } from "../../services/cloudinaryService";
 import toast from "react-hot-toast";
 import "./VendorProfilePage.css";
 
@@ -98,20 +99,28 @@ export default function VendorProfilePage() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const fd = new FormData();
+      
+      let logoUrl = vendor.logoUrl;
 
-      // Add all text fields
-      fd.append("name", form.name);
-      fd.append("companyName", form.companyName);
-      fd.append("phone", form.phone);
-      fd.append("bio", form.bio);
-      fd.append("gstNumber", form.gstNumber);
-      fd.append("taxNumber", form.taxNumber);
+      if (logoFile) {
+        const cloudRes = await uploadToCloudinary(logoFile, "vendors");
+        logoUrl = cloudRes.secure_url;
+      }
 
-      if (logoFile) fd.append("logo", logoFile);
+      const payload = {
+        name: form.name,
+        companyName: form.companyName,
+        phone: form.phone,
+        bio: form.bio,
+        gstNumber: form.gstNumber,
+        taxNumber: form.taxNumber,
+        logoUrl: logoUrl,
+      };
 
-      const res = await updateVendorMe(fd);
+      const res = await updateVendorMe(payload);
       setVendor(res.data);
+      setForm(res.data);
+      if (res.data.logoUrl) setLogoPreview(res.data.logoUrl);
       setEditing({});
       setLogoFile(null);
       toast.success("Profile updated successfully");
@@ -173,6 +182,13 @@ export default function VendorProfilePage() {
         <div className="header-content">
           <h1>Vendor Profile</h1>
           <p>Manage your vendor account information and details</p>
+          
+          {vendor.empanelment && (
+            <div className="empanelment-badge">
+              <CheckCircle size={14} />
+              <span>Verified: {vendor.empanelment.empanelmentName}</span>
+            </div>
+          )}
         </div>
 
         {/* Profile Completion Widget */}

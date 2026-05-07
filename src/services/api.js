@@ -49,8 +49,8 @@ export const vendorLogin = (data) => API.post("/vendors/login", data);
 export const vendorRegister = (data) => API.post("/vendors/register", data);
 export const vendorLogout = () => API.post("/vendors/logout");
 export const getVendorMe = () => API.get("/vendors/me");
-export const updateVendorMe = (formData) =>
-  API.patch("/vendors/update-me", formData);
+export const updateVendorMe = (data) =>
+  API.patch("/vendors/update-me", data);
 
 // Vendor Edit Requests
 export const createVendorEditRequest = (data) =>

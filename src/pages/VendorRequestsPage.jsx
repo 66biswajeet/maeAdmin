@@ -447,8 +447,8 @@ export default function VendorRequestsPage() {
                             transition: "background 0.15s",
                           }}
                           onMouseEnter={(e) =>
-                            (e.currentTarget.style.background =
-                              "var(--off-white)")
+                          (e.currentTarget.style.background =
+                            "var(--off-white)")
                           }
                           onMouseLeave={(e) =>
                             (e.currentTarget.style.background = "transparent")
@@ -629,17 +629,17 @@ export default function VendorRequestsPage() {
                                 flexWrap: "wrap",
                               }}
                             >
-                                <button
-                                  className="btn btn-ghost btn-sm"
-                                  style={{ fontSize: 11, padding: "3px 8px" }}
-                                  onClick={() => {
-                                    setSelected(vendor);
-                                    setEditingPlan(vendor.interestedPlan || "Startup / Promotion Plan");
-                                    setEditingCommission(vendor.commissionPercentage || 0);
-                                  }}
-                                >
-                                  <Eye size={11} /> View
-                                </button>
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                style={{ fontSize: 11, padding: "3px 8px" }}
+                                onClick={() => {
+                                  setSelected(vendor);
+                                  setEditingPlan(vendor.interestedPlan || "Startup / Promotion Plan");
+                                  setEditingCommission(vendor.commissionPercentage || 0);
+                                }}
+                              >
+                                <Eye size={11} /> View
+                              </button>
 
                               {vendor.status !== "approved" &&
                                 vendor.status !== "active" && (
@@ -686,26 +686,26 @@ export default function VendorRequestsPage() {
 
                               {(vendor.status === "approved" ||
                                 vendor.status === "active") && (
-                                <button
-                                  className="btn btn-sm"
-                                  style={{
-                                    fontSize: 11,
-                                    padding: "3px 8px",
-                                    background: "rgba(139,92,246,0.08)",
-                                    color: "#8b5cf6",
-                                    border: "1px solid rgba(139,92,246,0.2)",
-                                  }}
-                                  disabled={!!actionLoading}
-                                  onClick={() =>
-                                    doAction(vendor._id, "suspend")
-                                  }
-                                >
-                                  <PauseCircle size={11} />
-                                  {actionLoading === "suspend" + vendor._id
-                                    ? "..."
-                                    : "Suspend"}
-                                </button>
-                              )}
+                                  <button
+                                    className="btn btn-sm"
+                                    style={{
+                                      fontSize: 11,
+                                      padding: "3px 8px",
+                                      background: "rgba(139,92,246,0.08)",
+                                      color: "#8b5cf6",
+                                      border: "1px solid rgba(139,92,246,0.2)",
+                                    }}
+                                    disabled={!!actionLoading}
+                                    onClick={() =>
+                                      doAction(vendor._id, "suspend")
+                                    }
+                                  >
+                                    <PauseCircle size={11} />
+                                    {actionLoading === "suspend" + vendor._id
+                                      ? "..."
+                                      : "Suspend"}
+                                  </button>
+                                )}
 
                               <button
                                 className="btn btn-sm"
@@ -905,7 +905,7 @@ export default function VendorRequestsPage() {
                       Adjust Partnership Plan (Admin Only)
                     </label>
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <select 
+                      <select
                         className="fi"
                         style={{ fontSize: 13, flex: 1 }}
                         value={editingPlan}
@@ -929,7 +929,7 @@ export default function VendorRequestsPage() {
                         <option value="Silver Partner">Silver Partner</option>
                         <option value="Startup / Promotion Plan">Startup / Promotion Plan</option>
                       </select>
-                      <button 
+                      <button
                         className="btn btn-sm btn-teal"
                         disabled={editingPlan === selected.interestedPlan || !!actionLoading}
                         onClick={async () => {
@@ -975,19 +975,19 @@ export default function VendorRequestsPage() {
                   )}
                   {(selected.status === "approved" ||
                     selected.status === "active") && (
-                    <button
-                      className="btn btn-sm"
-                      style={{
-                        background: "rgba(139,92,246,0.1)",
-                        color: "#8b5cf6",
-                        border: "1px solid rgba(139,92,246,0.3)",
-                      }}
-                      disabled={!!actionLoading}
-                      onClick={() => doAction(selected._id, "suspend")}
-                    >
-                      <PauseCircle size={13} /> Suspend
-                    </button>
-                  )}
+                      <button
+                        className="btn btn-sm"
+                        style={{
+                          background: "rgba(139,92,246,0.1)",
+                          color: "#8b5cf6",
+                          border: "1px solid rgba(139,92,246,0.3)",
+                        }}
+                        disabled={!!actionLoading}
+                        onClick={() => doAction(selected._id, "suspend")}
+                      >
+                        <PauseCircle size={13} /> Suspend
+                      </button>
+                    )}
                   <button
                     className="btn btn-ghost btn-sm"
                     style={{ marginLeft: "auto" }}
