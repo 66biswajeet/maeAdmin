@@ -28,6 +28,7 @@ import StaffPage from "./pages/StaffPage";
 import StaffRequestsPage from "./pages/StaffRequestsPage";
 import AdminProductRequestsPage from "./pages/AdminProductRequestsPage";
 import AdminAllProductsPage from "./pages/AdminAllProductsPage";
+import AdminAddProductPage from "./pages/AdminAddProductPage";
 import AdminEditProductPage from "./pages/AdminEditProductPage";
 import AdminBookingsPage from "./pages/AdminBookingsPage";
 import VendorBookingsPage from "./pages/vendor/VendorBookingsPage";
@@ -143,6 +144,7 @@ export default function App() {
           <Route path="staff/requests" element={<StaffRequestsPage />} />
           <Route path="staff" element={<StaffPage />} />
           <Route path="products/all" element={<AdminAllProductsPage />} />
+          <Route path="products/add" element={<AdminAddProductPage />} />
           <Route
             path="products/edit/:productId"
             element={<AdminEditProductPage />}

@@ -100,7 +100,35 @@ function ItemCard({ it, bookingVendor, idx }) {
     (typeof it.productId === "string" ? it.productId : null) ||
     `Item ${idx + 1}`;
   const desc = stripHtml(snap.description || snap.shortDesc || "");
-  const plan = filter.plan || filter.planSnapshot || null;
+  const planNames = [];
+  if (filter.plans && Array.isArray(filter.plans)) {
+    // Collect unique plan names from variants
+    const uniqueNames = new Set();
+    filter.plans.forEach(planId => {
+      const match = snap.variants?.find(v => 
+        (v.plan?._id && v.plan._id.toString() === planId) || 
+        (v.plan && v.plan.toString() === planId)
+      );
+      if (match && match.plan?.name) {
+        uniqueNames.add(match.plan.name);
+      } else {
+        uniqueNames.add("Plan ID " + planId.slice(-4));
+      }
+    });
+    uniqueNames.forEach(n => planNames.push(n));
+  } else if (filter.plan || filter.planSnapshot) {
+    const p = filter.plan || filter.planSnapshot;
+    planNames.push(p.name || p.title || p._id || "Plan");
+  }
+
+  // Fallback: If no plans were explicitly recorded, try to guess from the unit price
+  if (planNames.length === 0 && snap.variants && Array.isArray(snap.variants)) {
+    const matchedVariant = snap.variants.find(v => (v.salePrice || v.price) === it.unitPrice);
+    if (matchedVariant && matchedVariant.plan && matchedVariant.plan.name) {
+      planNames.push(matchedVariant.plan.name);
+    }
+  }
+
   const cities = filter.cities || filter.citiesSelected || [];
 
   return (
@@ -133,11 +161,11 @@ function ItemCard({ it, bookingVendor, idx }) {
               {vendor.companyName || vendor.name}
             </span>
           )}
-          {plan && (
-            <span className="item-tag item-tag--plan">
-              {plan.name || plan.title || plan._id || "Plan"}
+          {planNames.map((p, idx) => (
+            <span key={idx} className="item-tag item-tag--plan" style={{ textTransform: 'capitalize' }}>
+              {p} Plan
             </span>
-          )}
+          ))}
         </div>
 
         {Array.isArray(cities) && cities.length > 0 && (

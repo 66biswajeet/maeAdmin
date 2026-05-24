@@ -8,6 +8,7 @@ import {
   Eye as EyeOff,
   Edit,
   Trash2,
+  Plus,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -187,9 +188,18 @@ export default function AdminAllProductsPage() {
 
   return (
     <div className="admin-all-products-page">
-      <div className="page-header">
-        <h1>All Products</h1>
-        <p>Manage all products across vendors</p>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1>All Products</h1>
+          <p>Manage all products across vendors</p>
+        </div>
+        <button 
+          className="btn-primary" 
+          onClick={() => navigate('/products/add')}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}
+        >
+          <Plus size={16} /> Add Product
+        </button>
       </div>
 
       <div className="controls-section">

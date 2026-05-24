@@ -13,24 +13,26 @@ import {
   AlertTriangle,
   FileSpreadsheet,
   Download,
+  User,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import toast from "react-hot-toast";
 import axios from "axios";
-import RichTextEditor from "../../components/RichTextEditor";
-import CloudinaryUpload from "../../components/CloudinaryUpload";
-import "./VendorAddProductPage.css";
+import RichTextEditor from "../components/RichTextEditor";
+import CloudinaryUpload from "../components/CloudinaryUpload";
+import "./vendor/VendorAddProductPage.css";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
-export default function VendorAddProductPage() {
+export default function AdminAddProductPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [plans, setPlans] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [plansLoading, setPlansLoading] = useState(true);
-  const [vendorData, setVendorData] = useState(null);
+  const [vendorsLoading, setVendorsLoading] = useState(true);
+  const [vendors, setVendors] = useState([]);
 
   const [form, setForm] = useState({
     title: "",
@@ -40,6 +42,7 @@ export default function VendorAddProductPage() {
     categories: [],
     images: [],
     variants: [],
+    vendor: "",
   });
 
   const [currentVariant, setCurrentVariant] = useState({
@@ -52,13 +55,15 @@ export default function VendorAddProductPage() {
 
   const [expandedCategories, setExpandedCategories] = useState(new Set());
 
-  const token = localStorage.getItem("vendorToken");
+  const token = localStorage.getItem("token");
+
+  const selectedVendorData = vendors.find(v => v._id === form.vendor);
 
   // Get zone name with city for display
   const getZoneName = (zone) => {
     const zoneLabel = ZONE_OPTIONS.find((z) => z.value === zone)?.label || zone;
-    if (zone === "basecity" && vendorData?.baseCity) {
-      return `📍 ${vendorData.baseCity.toUpperCase()} (base city)`;
+    if (zone === "basecity" && selectedVendorData?.baseCity) {
+      return `📍 ${selectedVendorData.baseCity.toUpperCase()} (base city)`;
     }
     return zoneLabel;
   };
@@ -67,9 +72,9 @@ export default function VendorAddProductPage() {
   const ZONE_OPTIONS = [
     {
       value: "basecity",
-      label: vendorData?.baseCity
-        ? `📍 ${vendorData.baseCity.toUpperCase()} (base city)`
-        : "📍 Your Base City",
+      label: selectedVendorData?.baseCity
+        ? `📍 ${selectedVendorData.baseCity.toUpperCase()} (base city)`
+        : "📍 Vendor Base City",
     },
     { value: "north", label: "🔵 North Zone" },
     { value: "south", label: "🔵 South Zone" },
@@ -81,10 +86,10 @@ export default function VendorAddProductPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [categoriesRes, plansRes, vendorRes] = await Promise.all([
-          axios.get(`${API_BASE}/categories`),
-          axios.get(`${API_BASE}/plans`),
-          axios.get(`${API_BASE}/vendors/me`, {
+        const [categoriesRes, plansRes, vendorsRes] = await Promise.all([
+          axios.get(`${API_BASE}/categories`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API_BASE}/plans`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API_BASE}/vendors`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -92,13 +97,14 @@ export default function VendorAddProductPage() {
           categoriesRes.data.categories || categoriesRes.data || [],
         );
         setPlans(plansRes.data.plans || plansRes.data || []);
-        setVendorData(vendorRes.data || vendorRes.data.vendor || {});
+        setVendors(vendorsRes.data.vendors || vendorsRes.data || []);
       } catch (err) {
         toast.error("Failed to load form data");
         console.error(err);
       } finally {
         setCategoriesLoading(false);
         setPlansLoading(false);
+        setVendorsLoading(false);
       }
     };
     fetchData();
@@ -270,7 +276,7 @@ export default function VendorAddProductPage() {
           if (!exists && !existsInForm) {
             newVariants.push({
               zone,
-              city: zone === "basecity" ? vendorData?.baseCity : null,
+              city: zone === "basecity" ? selectedVendorData?.baseCity : null,
               plan: plan._id,
               price,
               salePrice,
@@ -376,7 +382,7 @@ export default function VendorAddProductPage() {
         {
           zone: currentVariant.zone,
           city:
-            currentVariant.zone === "basecity" ? vendorData?.baseCity : null,
+            currentVariant.zone === "basecity" ? selectedVendorData?.baseCity : null,
           plan: currentVariant.plan,
           price: parseFloat(currentVariant.price),
           salePrice: currentVariant.salePrice
@@ -439,6 +445,10 @@ export default function VendorAddProductPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.vendor) {
+      toast.error("Please select a vendor");
+      return;
+    }
     if (!form.title || !form.sku) {
       toast.error("Product name and SKU are required");
       return;
@@ -457,12 +467,13 @@ export default function VendorAddProductPage() {
         categories: form.categories,
         images: form.images,
         variants: form.variants,
+        vendor: form.vendor,
       };
-      await axios.post(`${API_BASE}/products/vendor/create`, productData, {
+      await axios.post(`${API_BASE}/products/create`, productData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("Product submitted for approval!");
-      navigate("/vendor/products/all");
+      toast.success("Product created successfully!");
+      navigate("/products/all");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create product");
     } finally {
@@ -479,7 +490,7 @@ export default function VendorAddProductPage() {
       {/* ── BACK ── */}
       <button
         className="btn-back"
-        onClick={() => navigate("/vendor/products/all")}
+        onClick={() => navigate("/products/all")}
       >
         <ArrowLeft size={14} />
         Back to Products
@@ -574,11 +585,34 @@ export default function VendorAddProductPage() {
             <div>
               <p className="section-title">Basic Information</p>
               <p className="section-subtitle">
-                Name, description & identifiers
+                Name, vendor assignment, description & identifiers
               </p>
             </div>
           </div>
           <div className="section-body">
+            <div className="form-group">
+              <label>
+                Assign to Vendor <span className="label-required">*</span>
+              </label>
+              <select
+                name="vendor"
+                value={form.vendor}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select a vendor</option>
+                {vendorsLoading ? (
+                  <option disabled>Loading vendors...</option>
+                ) : (
+                  vendors.filter(v => v.status === "approved" || v.status === "active").map((v) => (
+                    <option key={v._id} value={v._id}>
+                      {v.companyName} ({v.name}) - {v.baseCity}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+
             <div className="form-row">
               <div className="form-group">
                 <label>
@@ -1049,7 +1083,7 @@ export default function VendorAddProductPage() {
           <button
             type="button"
             className="btn-cancel"
-            onClick={() => navigate("/vendor/products/all")}
+            onClick={() => navigate("/products/all")}
           >
             Cancel
           </button>

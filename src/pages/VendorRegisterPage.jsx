@@ -74,7 +74,7 @@ export default function VendorRegisterPage() {
         // Check multiple possible field names for role
         const role = admin.role || admin.type || admin.userType;
 
-        console.log("Admin data found:", { role, admin }); // Debug log
+
 
         // Check against various role patterns
         const isAdmin =
