@@ -15,10 +15,8 @@ export const searchCities = async (input) => {
     return { error: "No input provided", success: false, cities: [] };
   }
 
-  const isPincode = /^\d{6}$/.test(input.trim());
-  const endpoint = isPincode
-    ? `https://api.postalpincode.in/pincode/${input}`
-    : `https://api.postalpincode.in/postoffice/${input}`;
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+  const endpoint = `${API_BASE}/cities/pincode-search/${encodeURIComponent(input.trim())}`;
 
   // Add timeout to prevent hanging requests
   const controller = new AbortController();

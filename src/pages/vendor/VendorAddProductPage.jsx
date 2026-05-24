@@ -35,6 +35,7 @@ export default function VendorAddProductPage() {
   const [form, setForm] = useState({
     title: "",
     description: "",
+    additionalInfo: "",
     shortDesc: "",
     sku: "",
     categories: [],
@@ -452,6 +453,7 @@ export default function VendorAddProductPage() {
       const productData = {
         title: form.title,
         description: form.description,
+        additionalInfo: form.additionalInfo,
         shortDesc: form.shortDesc,
         sku: form.sku,
         categories: form.categories,
@@ -630,6 +632,17 @@ export default function VendorAddProductPage() {
                   setForm((prev) => ({ ...prev, description: html }))
                 }
                 placeholder="Describe features, benefits, specifications…"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Additional Info</label>
+              <RichTextEditor
+                value={form.additionalInfo}
+                onChange={(html) =>
+                  setForm((prev) => ({ ...prev, additionalInfo: html }))
+                }
+                placeholder="Enter additional details for this product…"
               />
             </div>
           </div>

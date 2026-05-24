@@ -30,6 +30,7 @@ export default function VendorProductDetailPage() {
   const [form, setForm] = useState({
     title: "",
     description: "",
+    additionalInfo: "",
     shortDesc: "",
     sku: "",
     categories: [],
@@ -85,6 +86,7 @@ export default function VendorProductDetailPage() {
         setForm({
           title: productRes.data.title,
           description: productRes.data.description,
+          additionalInfo: productRes.data.additionalInfo || "",
           shortDesc: productRes.data.shortDesc,
           sku: productRes.data.sku,
           categories: productRes.data.categories?.map((c) => c._id) || [],
@@ -248,6 +250,7 @@ export default function VendorProductDetailPage() {
       const productData = {
         title: form.title,
         description: form.description,
+        additionalInfo: form.additionalInfo,
         shortDesc: form.shortDesc,
         sku: form.sku,
         categories: form.categories,
@@ -379,6 +382,16 @@ export default function VendorProductDetailPage() {
           </div>
 
           <div className="detail-card">
+            <h3>Additional Info</h3>
+            <div
+              className="description-content"
+              dangerouslySetInnerHTML={{
+                __html: product.additionalInfo || "—",
+              }}
+            />
+          </div>
+
+          <div className="detail-card">
             <h3>Short Description</h3>
             <p>{product.shortDesc || "—"}</p>
           </div>
@@ -477,6 +490,17 @@ export default function VendorProductDetailPage() {
                     setForm((prev) => ({ ...prev, description: html }))
                   }
                   placeholder="Describe your product..."
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Additional Info</label>
+                <RichTextEditor
+                  value={form.additionalInfo}
+                  onChange={(html) =>
+                    setForm((prev) => ({ ...prev, additionalInfo: html }))
+                  }
+                  placeholder="Enter additional details for this product…"
                 />
               </div>
 

@@ -26,6 +26,7 @@ export default function AdminEditProductPage() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
+    additionalInfo: "",
     shortDesc: "",
     commission: "",
     sku: "",
@@ -85,6 +86,7 @@ export default function AdminEditProductPage() {
         setFormData({
           title: product.title || "",
           description: product.description || "",
+          additionalInfo: product.additionalInfo || "",
           shortDesc: product.shortDesc || "",
           commission: product.commission || "",
           sku: product.sku || "",
@@ -329,6 +331,7 @@ export default function AdminEditProductPage() {
       const submitData = new FormData();
       submitData.append("title", formData.title);
       submitData.append("description", formData.description);
+      submitData.append("additionalInfo", formData.additionalInfo);
       submitData.append("shortDesc", formData.shortDesc);
       submitData.append("commission", formData.commission);
       submitData.append("sku", formData.sku);
@@ -589,6 +592,17 @@ export default function AdminEditProductPage() {
                 setFormData((prev) => ({ ...prev, description: html }))
               }
               placeholder="Describe your product features, benefits, specifications…"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Additional Info</label>
+            <RichTextEditor
+              value={formData.additionalInfo}
+              onChange={(html) =>
+                setFormData((prev) => ({ ...prev, additionalInfo: html }))
+              }
+              placeholder="Enter additional details for this product…"
             />
           </div>
         </section>
