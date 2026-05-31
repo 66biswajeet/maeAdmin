@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import RichTextEditor from "../components/RichTextEditor";
 import CloudinaryUpload from "../components/CloudinaryUpload";
+import { getCategoryEmpanelments } from "../services/api";
 import "./AdminEditProductPage.css";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
@@ -37,6 +38,7 @@ export default function AdminEditProductPage() {
     isBestDeal: false,
     deliverables: [],
     variants: [],
+    empanelment: "",
   });
 
   const [currentVariant, setCurrentVariant] = useState({
@@ -49,6 +51,7 @@ export default function AdminEditProductPage() {
 
   const [deliverableInput, setDeliverableInput] = useState("");
   const [expandedCategories, setExpandedCategories] = useState(new Set());
+  const [categoryEmpanelments, setCategoryEmpanelments] = useState([]);
 
   // Zone options
   const ZONE_OPTIONS = [
@@ -97,6 +100,7 @@ export default function AdminEditProductPage() {
           isBestDeal: product.isBestDeal || false,
           deliverables: product.deliverables || [],
           variants: product.variants || [],
+          empanelment: product.empanelment?._id || product.empanelment || "",
         });
 
         if (product.images && product.images.length > 0) {
@@ -173,6 +177,23 @@ export default function AdminEditProductPage() {
     }
     setExpandedCategories(newExpanded);
   };
+
+  // Fetch empanelments when categories change
+  useEffect(() => {
+    const fetchCategoryEmpanelments = async () => {
+      if (formData.categories.length === 0) {
+        setCategoryEmpanelments([]);
+        return;
+      }
+      try {
+        const res = await getCategoryEmpanelments(formData.categories[0]);
+        setCategoryEmpanelments(res.data || []);
+      } catch {
+        setCategoryEmpanelments([]);
+      }
+    };
+    fetchCategoryEmpanelments();
+  }, [formData.categories]);
 
   // Handle image upload
   const handleImageUpload = (e) => {
@@ -347,6 +368,9 @@ export default function AdminEditProductPage() {
       submitData.append("isBestDeal", formData.isBestDeal);
       submitData.append("deliverables", JSON.stringify(formData.deliverables));
       submitData.append("variants", JSON.stringify(formData.variants));
+      if (formData.empanelment) {
+        submitData.append("empanelment", formData.empanelment);
+      }
 
       // Add new images
       newImages.forEach((img) => {
@@ -561,6 +585,54 @@ export default function AdminEditProductPage() {
                 })()}
               </div>
             </div>
+
+            {/* Empanelment picker for edit */}
+            {categoryEmpanelments.length > 0 && (
+              <div className="form-group">
+                <label>Empanelment</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
+                  {categoryEmpanelments.map((emp) => {
+                    const isSelected = formData.empanelment === emp._id;
+                    return (
+                      <label
+                        key={emp._id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          fontSize: "0.8rem",
+                          cursor: "pointer",
+                          padding: "6px 14px",
+                          borderRadius: 20,
+                          border: `1.5px solid ${isSelected ? "#0ea5e9" : "#e2e8f0"}`,
+                          background: isSelected ? "#e0f2fe" : "#f8fafc",
+                          color: isSelected ? "#0369a1" : "#64748b",
+                          fontWeight: isSelected ? 600 : 400,
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="empanelment-edit"
+                          checked={isSelected}
+                          style={{ display: "none" }}
+                          onChange={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              empanelment: isSelected ? "" : emp._id,
+                            }))
+                          }
+                        />
+                        {emp.empanelmentName}
+                      </label>
+                    );
+                  })}
+                </div>
+                <span style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: 4, display: "block" }}>
+                  Only empanelments linked to the selected category are shown
+                </span>
+              </div>
+            )}
             <div className="form-group">
               <label>Commission (%)</label>
               <input

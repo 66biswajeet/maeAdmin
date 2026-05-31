@@ -18,6 +18,7 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
+  getEmpanelments,
 } from "../services/api";
 import { uploadToCloudinary } from "../services/cloudinaryService";
 import toast from "react-hot-toast";
@@ -28,10 +29,12 @@ const EMPTY_FORM = {
   parent: "",
   order: 0,
   isActive: true,
+  empanelments: [],
 };
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState([]);
+  const [allEmpanelments, setAllEmpanelments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -46,8 +49,12 @@ export default function CategoriesPage() {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await getAdminCategories();
-      setCategories(res.data);
+      const [catRes, empRes] = await Promise.all([
+        getAdminCategories(),
+        getEmpanelments(),
+      ]);
+      setCategories(catRes.data);
+      setAllEmpanelments(empRes.data || []);
     } catch {
       toast.error("Failed to load categories");
     } finally {
@@ -72,6 +79,44 @@ export default function CategoriesPage() {
     return acc;
   }, {});
 
+  // Helper to build a flat list of all categories with hierarchy indentation, excluding a given sub-tree
+  const getCategoryOptions = (currentEditingId) => {
+    const list = [];
+    
+    // Get all descendant IDs of currentEditingId to exclude them from parent options
+    const getDescendantsList = (id) => {
+      const descendants = [];
+      const children = childMap[id] || [];
+      for (const child of children) {
+        descendants.push(child._id);
+        descendants.push(...getDescendantsList(child._id));
+      }
+      return descendants;
+    };
+    
+    const excludedIds = currentEditingId 
+      ? [currentEditingId, ...getDescendantsList(currentEditingId)]
+      : [];
+
+    const traverse = (cats, depth) => {
+      for (const cat of cats) {
+        if (excludedIds.includes(cat._id)) continue;
+        list.push({
+          _id: cat._id,
+          name: cat.name,
+          depth: depth,
+        });
+        const children = childMap[cat._id] || [];
+        traverse(children, depth + 1);
+      }
+    };
+    
+    traverse(roots, 0);
+    return list;
+  };
+
+  const categoryOptions = getCategoryOptions(editing?._id);
+
   const filtered = (list) =>
     search
       ? list.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()))
@@ -93,6 +138,7 @@ export default function CategoriesPage() {
       parent: cat.parent?._id || cat.parent || "",
       order: cat.order ?? 0,
       isActive: cat.isActive,
+      empanelments: (cat.empanelments || []).map((e) => e._id || e),
     });
     setIconFile(null);
     setIconPreview(cat.iconUrl || null);
@@ -127,6 +173,7 @@ export default function CategoriesPage() {
         isActive: form.isActive,
         parent: form.parent || null,
         iconUrl,
+        empanelments: form.empanelments,
       };
 
       if (editing) {
@@ -360,12 +407,12 @@ export default function CategoriesPage() {
                     key={cat._id}
                     cat={cat}
                     children={childMap[cat._id] || []}
-                    expanded={!!expandedIds[cat._id]}
-                    onToggleExpand={() => toggleExpand(cat._id)}
+                    expandedIds={expandedIds}
+                    onToggleExpand={toggleExpand}
                     onEdit={openEdit}
                     onDelete={handleDelete}
                     onToggleActive={handleToggleActive}
-                    onAddSub={() => openAdd(cat._id)}
+                    onAddSub={openAdd}
                     childMap={childMap}
                     depth={0}
                   />
@@ -431,7 +478,70 @@ export default function CategoriesPage() {
                 />
               </div>
 
-              {/* Parent selector (only for non-root, or let admin pick) */}
+              {/* Empanelments */}
+              <div className="fg">
+                <label className="fl">Empanelments</label>
+                <div
+                  style={{
+                    border: "1px solid var(--border)",
+                    borderRadius: 8,
+                    maxHeight: 180,
+                    overflowY: "auto",
+                    padding: "8px 10px",
+                    background: "var(--off-white)",
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 8,
+                  }}
+                >
+                  {allEmpanelments.length === 0 ? (
+                    <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                      No empanelments available
+                    </span>
+                  ) : (
+                    allEmpanelments.map((emp) => {
+                      const checked = form.empanelments.includes(emp._id);
+                      return (
+                        <label
+                          key={emp._id}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 5,
+                            fontSize: 12,
+                            cursor: "pointer",
+                            padding: "4px 10px",
+                            borderRadius: 20,
+                            border: `1px solid ${checked ? "var(--teal)" : "var(--border)"}`,
+                            background: checked ? "rgba(0,201,167,0.1)" : "#fff",
+                            color: checked ? "var(--teal)" : "var(--text-secondary)",
+                            fontWeight: checked ? 600 : 400,
+                            transition: "all 0.15s",
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            style={{ display: "none" }}
+                            onChange={() => {
+                              const updated = checked
+                                ? form.empanelments.filter((id) => id !== emp._id)
+                                : [...form.empanelments, emp._id];
+                              set("empanelments", updated);
+                            }}
+                          />
+                          {emp.empanelmentName}
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
+                <small style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>
+                  These empanelments will be available as filter options on the category page
+                </small>
+              </div>
+
+              {/* Parent selector (indented hierarchy) */}
               <div className="g2">
                 <div className="fg">
                   <label className="fl">Parent Category</label>
@@ -441,13 +551,11 @@ export default function CategoriesPage() {
                     onChange={(e) => set("parent", e.target.value)}
                   >
                     <option value="">— Root (no parent) —</option>
-                    {roots
-                      .filter((r) => !editing || r._id !== editing._id)
-                      .map((r) => (
-                        <option key={r._id} value={r._id}>
-                          {r.name}
-                        </option>
-                      ))}
+                    {categoryOptions.map((opt) => (
+                      <option key={opt._id} value={opt._id}>
+                        {"\u00A0\u00A0".repeat(opt.depth) + (opt.depth > 0 ? "↳ " : "") + opt.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="fg">
@@ -590,7 +698,7 @@ export default function CategoriesPage() {
 function CategoryRow({
   cat,
   children,
-  expanded,
+  expandedIds,
   onToggleExpand,
   onEdit,
   onDelete,
@@ -601,6 +709,7 @@ function CategoryRow({
 }) {
   const hasChildren = children.length > 0;
   const indent = depth * 24;
+  const expanded = !!expandedIds[cat._id];
 
   return (
     <>
@@ -632,7 +741,7 @@ function CategoryRow({
             {/* Expand toggle */}
             {hasChildren ? (
               <button
-                onClick={onToggleExpand}
+                onClick={() => onToggleExpand(cat._id)}
                 style={{
                   background: "none",
                   border: "none",
@@ -812,17 +921,15 @@ function CategoryRow({
         {/* Actions */}
         <td style={{ padding: "10px 16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            {/* Add sub-category (only for root-level items) */}
-            {depth === 0 && (
-              <button
-                className="btn btn-ghost btn-sm"
-                style={{ fontSize: 11, padding: "3px 8px" }}
-                onClick={onAddSub}
-                title="Add subcategory"
-              >
-                <Plus size={11} /> Sub
-              </button>
-            )}
+            {/* Add sub-category */}
+            <button
+              className="btn btn-ghost btn-sm"
+              style={{ fontSize: 11, padding: "3px 8px" }}
+              onClick={() => onAddSub(cat._id)}
+              title="Add subcategory"
+            >
+              <Plus size={11} /> Sub
+            </button>
             <button
               className="btn btn-ghost btn-sm"
               style={{ fontSize: 11, padding: "3px 8px" }}
@@ -860,12 +967,12 @@ function CategoryRow({
             key={child._id}
             cat={child}
             children={childMap[child._id] || []}
-            expanded={false}
-            onToggleExpand={() => {}}
+            expandedIds={expandedIds}
+            onToggleExpand={onToggleExpand}
             onEdit={onEdit}
             onDelete={onDelete}
             onToggleActive={onToggleActive}
-            onAddSub={() => {}}
+            onAddSub={onAddSub}
             childMap={childMap}
             depth={depth + 1}
           />

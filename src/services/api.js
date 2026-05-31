@@ -120,6 +120,8 @@ export const createCategory = (data) => API.post("/categories", data);
 export const updateCategory = (id, data) =>
   API.patch(`/categories/${id}`, data);
 export const deleteCategory = (id) => API.delete(`/categories/${id}`);
+export const getCategoryEmpanelments = (categoryId) =>
+  API.get(`/categories/${categoryId}/empanelments`);
 
 // ── Cities ──────────────────────────────────────────────────────────────────
 export const getCities = () => API.get("/cities");

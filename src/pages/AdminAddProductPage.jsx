@@ -20,6 +20,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import RichTextEditor from "../components/RichTextEditor";
 import CloudinaryUpload from "../components/CloudinaryUpload";
+import { getCategoryEmpanelments } from "../services/api";
 import "./vendor/VendorAddProductPage.css";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
@@ -44,7 +45,10 @@ export default function AdminAddProductPage() {
     images: [],
     variants: [],
     vendor: "",
+    empanelment: "",
   });
+
+  const [categoryEmpanelments, setCategoryEmpanelments] = useState([]);
 
   const [currentVariant, setCurrentVariant] = useState({
     zone: "",
@@ -155,6 +159,24 @@ export default function AdminAddProductPage() {
     }
     setExpandedCategories(newExpanded);
   };
+
+  // Fetch empanelments for the selected categories
+  useEffect(() => {
+    const fetchCategoryEmpanelments = async () => {
+      if (form.categories.length === 0) {
+        setCategoryEmpanelments([]);
+        return;
+      }
+      try {
+        // Use the first selected category to fetch empanelments
+        const res = await getCategoryEmpanelments(form.categories[0]);
+        setCategoryEmpanelments(res.data || []);
+      } catch {
+        setCategoryEmpanelments([]);
+      }
+    };
+    fetchCategoryEmpanelments();
+  }, [form.categories]);
 
   const handleVariantChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -470,6 +492,7 @@ export default function AdminAddProductPage() {
         images: form.images,
         variants: form.variants,
         vendor: form.vendor,
+        empanelment: form.empanelment || undefined,
       };
       await axios.post(`${API_BASE}/products/create`, productData, {
         headers: { Authorization: `Bearer ${token}` },
@@ -866,6 +889,70 @@ export default function AdminAddProductPage() {
             </div>
           </div>
         </div>
+
+        {/* ══ SECTION 2B: EMPANELMENT ══ */}
+        {categoryEmpanelments.length > 0 && (
+          <div className="form-section">
+            <div className="section-header">
+              <div className="section-icon">
+                <Tag size={16} />
+              </div>
+              <div>
+                <p className="section-title">Empanelment</p>
+                <p className="section-subtitle">
+                  Select the empanelment for this product (based on selected category)
+                </p>
+              </div>
+            </div>
+            <div className="section-body">
+              <div className="form-group">
+                <label>Empanelment</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
+                  {categoryEmpanelments.map((emp) => {
+                    const isSelected = form.empanelment === emp._id;
+                    return (
+                      <label
+                        key={emp._id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          fontSize: "0.8rem",
+                          cursor: "pointer",
+                          padding: "6px 14px",
+                          borderRadius: 20,
+                          border: `1.5px solid ${isSelected ? "#0ea5e9" : "#e2e8f0"}`,
+                          background: isSelected ? "#e0f2fe" : "#f8fafc",
+                          color: isSelected ? "#0369a1" : "#64748b",
+                          fontWeight: isSelected ? 600 : 400,
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="empanelment"
+                          value={emp._id}
+                          checked={isSelected}
+                          style={{ display: "none" }}
+                          onChange={() =>
+                            setForm((prev) => ({
+                              ...prev,
+                              empanelment: isSelected ? "" : emp._id,
+                            }))
+                          }
+                        />
+                        {emp.empanelmentName}
+                      </label>
+                    );
+                  })}
+                </div>
+                <span className="form-hint" style={{ marginTop: 6, display: "block" }}>
+                  Only empanelments linked to the selected category are shown
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ══ SECTION 3: VARIANTS ══ */}
         <div className="form-section">
