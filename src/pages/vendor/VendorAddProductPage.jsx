@@ -42,7 +42,7 @@ export default function VendorAddProductPage() {
     categories: [],
     images: [],
     variants: [],
-    empanelment: "",
+    empanelment: [],
   });
 
   const [categoryEmpanelments, setCategoryEmpanelments] = useState([]);
@@ -480,7 +480,7 @@ export default function VendorAddProductPage() {
         categories: form.categories,
         images: form.images,
         variants: form.variants,
-        empanelment: form.empanelment || undefined,
+        empanelment: form.empanelment && form.empanelment.length > 0 ? form.empanelment : undefined,
       };
       await axios.post(`${API_BASE}/products/vendor/create`, productData, {
         headers: { Authorization: `Bearer ${token}` },
@@ -874,7 +874,7 @@ export default function VendorAddProductPage() {
                 <label>Empanelment</label>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
                   {categoryEmpanelments.map((emp) => {
-                    const isSelected = form.empanelment === emp._id;
+                    const isSelected = (form.empanelment || []).includes(emp._id);
                     return (
                       <label
                         key={emp._id}
@@ -894,16 +894,22 @@ export default function VendorAddProductPage() {
                         }}
                       >
                         <input
-                          type="radio"
+                          type="checkbox"
                           name="vendor-empanelment"
                           value={emp._id}
                           checked={isSelected}
                           style={{ display: "none" }}
                           onChange={() =>
-                            setForm((prev) => ({
-                              ...prev,
-                              empanelment: isSelected ? "" : emp._id,
-                            }))
+                            setForm((prev) => {
+                              const current = prev.empanelment || [];
+                              const isSel = current.includes(emp._id);
+                              return {
+                                ...prev,
+                                empanelment: isSel
+                                  ? current.filter((id) => id !== emp._id)
+                                  : [...current, emp._id],
+                              };
+                            })
                           }
                         />
                         {emp.empanelmentName}

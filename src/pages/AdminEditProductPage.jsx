@@ -38,7 +38,7 @@ export default function AdminEditProductPage() {
     isBestDeal: false,
     deliverables: [],
     variants: [],
-    empanelment: "",
+    empanelment: [],
   });
 
   const [currentVariant, setCurrentVariant] = useState({
@@ -100,7 +100,11 @@ export default function AdminEditProductPage() {
           isBestDeal: product.isBestDeal || false,
           deliverables: product.deliverables || [],
           variants: product.variants || [],
-          empanelment: product.empanelment?._id || product.empanelment || "",
+          empanelment: Array.isArray(product.empanelment)
+            ? product.empanelment.map(emp => emp._id || emp)
+            : product.empanelment
+            ? [product.empanelment._id || product.empanelment]
+            : [],
         });
 
         if (product.images && product.images.length > 0) {
@@ -368,8 +372,12 @@ export default function AdminEditProductPage() {
       submitData.append("isBestDeal", formData.isBestDeal);
       submitData.append("deliverables", JSON.stringify(formData.deliverables));
       submitData.append("variants", JSON.stringify(formData.variants));
-      if (formData.empanelment) {
-        submitData.append("empanelment", formData.empanelment);
+      if (formData.empanelment && formData.empanelment.length > 0) {
+        formData.empanelment.forEach((empId) => {
+          submitData.append("empanelment", empId);
+        });
+      } else {
+        submitData.append("empanelment", "");
       }
 
       // Add new images
@@ -592,7 +600,7 @@ export default function AdminEditProductPage() {
                 <label>Empanelment</label>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
                   {categoryEmpanelments.map((emp) => {
-                    const isSelected = formData.empanelment === emp._id;
+                    const isSelected = (formData.empanelment || []).includes(emp._id);
                     return (
                       <label
                         key={emp._id}
@@ -612,15 +620,21 @@ export default function AdminEditProductPage() {
                         }}
                       >
                         <input
-                          type="radio"
+                          type="checkbox"
                           name="empanelment-edit"
                           checked={isSelected}
                           style={{ display: "none" }}
                           onChange={() =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              empanelment: isSelected ? "" : emp._id,
-                            }))
+                            setFormData((prev) => {
+                              const current = prev.empanelment || [];
+                              const isSel = current.includes(emp._id);
+                              return {
+                                ...prev,
+                                empanelment: isSel
+                                  ? current.filter((id) => id !== emp._id)
+                                  : [...current, emp._id],
+                              };
+                            })
                           }
                         />
                         {emp.empanelmentName}
