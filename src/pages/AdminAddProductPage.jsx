@@ -160,6 +160,83 @@ export default function AdminAddProductPage() {
     setExpandedCategories(newExpanded);
   };
 
+  const renderCategoryNode = (category, level = 0) => {
+    const children = categories.filter(
+      (cat) => (cat.parent?._id || cat.parent) === category._id
+    );
+    const hasChildren = children.length > 0;
+    const isExpanded = expandedCategories.has(category._id);
+    const isSelected = form.categories.includes(category._id);
+
+    return (
+      <div key={category._id} style={{ marginLeft: level > 0 ? "16px" : "0", marginTop: "4px" }}>
+        <div 
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "4px 8px",
+            borderRadius: "6px",
+            transition: "background 0.2s",
+          }}
+          className="category-tree-node"
+        >
+          {hasChildren ? (
+            <button
+              type="button"
+              onClick={() => toggleParentCategory(category._id)}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: "2px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#2c5fe6",
+                transform: isExpanded ? "rotate(90deg)" : "none",
+                transition: "transform 0.2s",
+              }}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          ) : (
+            <span style={{ width: "18px", flexShrink: 0 }}></span>
+          )}
+
+          <label className="checkbox-item" style={{ padding: 0, margin: 0, display: "flex", alignItems: "center", cursor: "pointer", flex: 1 }}>
+            <div className="checkbox-wrapper">
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={() => handleCategoryToggle(category._id)}
+              />
+              <div className="checkbox-custom"></div>
+            </div>
+            <span className="checkbox-label" style={{ fontWeight: hasChildren ? "600" : "400" }}>
+              {category.name}
+            </span>
+          </label>
+        </div>
+
+        {hasChildren && isExpanded && (
+          <div style={{ borderLeft: "1px dashed #cbd5e1", marginLeft: "15px", paddingLeft: "8px" }}>
+            {children.map((child) => renderCategoryNode(child, level + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Fetch empanelments for the selected categories
   useEffect(() => {
     const fetchCategoryEmpanelments = async () => {
@@ -847,29 +924,8 @@ export default function AdminAddProductPage() {
                           </button>
                           {isExpanded && subcats.length > 0 && (
                             <div className="accordion-body">
-                              <div className="subcategories-grid">
-                                {subcats.map((subcat) => (
-                                  <label
-                                    key={subcat._id}
-                                    className="checkbox-item"
-                                  >
-                                    <div className="checkbox-wrapper">
-                                      <input
-                                        type="checkbox"
-                                        checked={form.categories.includes(
-                                          subcat._id,
-                                        )}
-                                        onChange={() =>
-                                          handleCategoryToggle(subcat._id)
-                                        }
-                                      />
-                                      <div className="checkbox-custom"></div>
-                                    </div>
-                                    <span className="checkbox-label">
-                                      {subcat.name}
-                                    </span>
-                                  </label>
-                                ))}
+                              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                                {subcats.map((subcat) => renderCategoryNode(subcat, 0))}
                               </div>
                             </div>
                           )}
