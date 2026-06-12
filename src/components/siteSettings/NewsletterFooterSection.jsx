@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mail, Plus, X } from 'lucide-react';
+import { Mail, Plus, X, Edit2 } from 'lucide-react';
 import Toggle from '../ui/Toggle';
 import Modal from '../ui/Modal';
 import {
@@ -9,14 +9,30 @@ import {
 } from '../../services/api';
 import toast from 'react-hot-toast';
 
-function FooterColumnCard({ col, onUpdate, onDelete, onAddLink, onDeleteLink }) {
+function FooterColumnCard({ col, onUpdate, onDelete, onAddLink, onDeleteLink, onEditLink }) {
   return (
     <div className="footer-col">
-      <div className="fc-title">{col.columnTitle}</div>
+      <div className="fc-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span>{col.columnTitle}</span>
+        <button 
+          className="col-del-btn"
+          onClick={() => {
+            if (window.confirm(`Are you sure you want to delete the column "${col.columnTitle}"?`)) {
+              onDelete(col._id);
+            }
+          }}
+          title="Delete Column"
+        >
+          <X size={14} />
+        </button>
+      </div>
       {col.links?.map(link => (
         <div key={link._id} className="fl-item">
           <span className="fl-dot" />
           <span className="fl-txt">{link.label}</span>
+          <button className="fl-edit" style={{ marginRight: '4px' }} onClick={() => onEditLink(col, link)}>
+            <Edit2 size={11} />
+          </button>
           <button className="fl-del" onClick={() => onDeleteLink(col._id, link._id)}>
             <X size={11} />
           </button>
@@ -44,6 +60,14 @@ export default function NewsletterFooterSection({ data, footerData, onNewsletter
   const [activeCol, setActiveCol] = useState(null);
   const [newColTitle, setNewColTitle] = useState('');
   const [newLink, setNewLink] = useState({ label: '', url: '' });
+  const [showEditLink, setShowEditLink] = useState(false);
+  const [editingLink, setEditingLink] = useState(null);
+  const [socialLinks, setSocialLinks] = useState(footerData?.socialLinks || []);
+  const [showSocialModal, setShowSocialModal] = useState(false);
+  const [isEditingSocial, setIsEditingSocial] = useState(false);
+  const [socialIndex, setSocialIndex] = useState(null);
+  const [socialForm, setSocialForm] = useState({ platform: '', url: '' });
+  const [customPlatform, setCustomPlatform] = useState('');
 
   const setNlField = (k, v) => setNl(p => ({ ...p, [k]: v }));
 
@@ -106,9 +130,89 @@ export default function NewsletterFooterSection({ data, footerData, onNewsletter
     } catch { toast.error('Failed to remove link'); }
   };
 
+  const handleEditLink = (col, link) => {
+    setActiveCol(col);
+    setEditingLink({ _id: link._id, label: link.label, url: link.url });
+    setShowEditLink(true);
+  };
+
+  const handleSaveEditLink = async () => {
+    if (!editingLink.label || !editingLink.url || !activeCol) return;
+    try {
+      const updatedLinks = activeCol.links.map(l =>
+        l._id === editingLink._id ? { ...l, label: editingLink.label, url: editingLink.url } : l
+      );
+      const res = await updateFooterColumn(activeCol._id, {
+        columnTitle: activeCol.columnTitle,
+        links: updatedLinks,
+      });
+      setColumns(res.data.footer?.columns || columns);
+      setShowEditLink(false);
+      setEditingLink(null);
+      setActiveCol(null);
+      toast.success('Link updated!');
+    } catch { toast.error('Failed to update link'); }
+  };
+
+  const PREDEFINED_PLATFORMS = ['facebook', 'instagram', 'youtube', 'x', 'linkedin', 'whatsapp', 'pinterest', 'tiktok', 'threads'];
+
+  const handleAddSocialClick = () => {
+    setIsEditingSocial(false);
+    setSocialForm({ platform: 'facebook', url: '' });
+    setCustomPlatform('');
+    setShowSocialModal(true);
+  };
+
+  const handleEditSocialClick = (sl, index) => {
+    setIsEditingSocial(true);
+    setSocialIndex(index);
+    const lowerPlatform = sl.platform.toLowerCase().trim();
+    if (PREDEFINED_PLATFORMS.includes(lowerPlatform)) {
+      setSocialForm({ platform: lowerPlatform, url: sl.url });
+      setCustomPlatform('');
+    } else {
+      setSocialForm({ platform: 'custom', url: sl.url });
+      setCustomPlatform(sl.platform);
+    }
+    setShowSocialModal(true);
+  };
+
+  const handleDeleteSocialLink = (index) => {
+    if (window.confirm('Are you sure you want to delete this social link?')) {
+      const updated = socialLinks.filter((_, i) => i !== index);
+      setSocialLinks(updated);
+      toast.success('Social link removed. Click "Save Footer" to apply changes.');
+    }
+  };
+
+  const handleSaveSocialLink = () => {
+    let finalPlatform = socialForm.platform;
+    if (finalPlatform === 'custom') {
+      finalPlatform = customPlatform.trim();
+    }
+    if (!finalPlatform || !socialForm.url.trim()) {
+      toast.error("Please fill in both the platform and link URL");
+      return;
+    }
+    
+    const newSocial = { platform: finalPlatform, url: socialForm.url };
+    if (isEditingSocial) {
+      const updated = socialLinks.map((sl, i) => 
+        i === socialIndex ? { ...sl, ...newSocial } : sl
+      );
+      setSocialLinks(updated);
+      toast.success('Social link updated. Click "Save Footer" to apply changes.');
+    } else {
+      setSocialLinks([...socialLinks, newSocial]);
+      toast.success('Social link added. Click "Save Footer" to apply changes.');
+    }
+    setShowSocialModal(false);
+    setCustomPlatform('');
+  };
+
   const handleSaveFooter = async () => {
     try {
-      const res = await updateFooter({ sectionVisible, columns });
+      const res = await updateFooter({ sectionVisible, columns, socialLinks });
       onFooterChange(res.data.footer);
       toast.success('Footer saved!');
     } catch { toast.error('Failed to save footer'); }
@@ -153,6 +257,36 @@ export default function NewsletterFooterSection({ data, footerData, onNewsletter
 
         <div className="divider" />
 
+        {/* Social Media Links */}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div className="fl">Social Media Links</div>
+            <button className="btn btn-ghost btn-sm" onClick={handleAddSocialClick}>
+              <Plus size={12} /> Add Social Link
+            </button>
+          </div>
+          <div className="cat-grid" style={{ marginTop: 0 }}>
+            {socialLinks.map((sl, index) => (
+              <div key={sl._id || index} className="cat-pill">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', overflow: 'hidden' }}>
+                  <span style={{ fontSize: '11.5px', fontWeight: 'bold' }}>{sl.platform}</span>
+                  <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{sl.url}</span>
+                </div>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button className="cat-del" style={{ padding: '4px', color: 'var(--teal)' }} onClick={() => handleEditSocialClick(sl, index)}>
+                    <Edit2 size={12} />
+                  </button>
+                  <button className="cat-del" style={{ padding: '4px' }} onClick={() => handleDeleteSocialLink(index)}>
+                    <X size={12} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="divider" />
+
         {/* Footer columns */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -170,6 +304,7 @@ export default function NewsletterFooterSection({ data, footerData, onNewsletter
                 onDelete={handleDeleteColumn}
                 onAddLink={handleAddLink}
                 onDeleteLink={handleDeleteLink}
+                onEditLink={handleEditLink}
               />
             ))}
           </div>
@@ -219,6 +354,113 @@ export default function NewsletterFooterSection({ data, footerData, onNewsletter
             <div className="fg">
               <label className="fl">URL</label>
               <input className="fi" value={newLink.url} onChange={e => setNewLink(p => ({ ...p, url: e.target.value }))} placeholder="/products/iso-27001-sms" />
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Edit Link Modal */}
+      {showEditLink && (
+        <Modal
+          title={`Edit Link in "${activeCol?.columnTitle}"`}
+          onClose={() => {
+            setShowEditLink(false);
+            setEditingLink(null);
+            setActiveCol(null);
+          }}
+          actions={
+            <>
+              <button className="btn btn-ghost btn-sm" onClick={() => {
+                setShowEditLink(false);
+                setEditingLink(null);
+                setActiveCol(null);
+              }}>Cancel</button>
+              <button className="btn btn-teal btn-sm" onClick={handleSaveEditLink}>Save Changes</button>
+            </>
+          }
+        >
+          <div className="gap12">
+            <div className="fg">
+              <label className="fl">Label</label>
+              <input 
+                className="fi" 
+                value={editingLink?.label || ''} 
+                onChange={e => setEditingLink(p => ({ ...p, label: e.target.value }))} 
+                placeholder="e.g. ISO 27001 SMS" 
+                autoFocus 
+              />
+            </div>
+            <div className="fg">
+              <label className="fl">URL</label>
+              <input 
+                className="fi" 
+                value={editingLink?.url || ''} 
+                onChange={e => setEditingLink(p => ({ ...p, url: e.target.value }))} 
+                placeholder="/products/iso-27001-sms" 
+              />
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Social Link Add/Edit Modal */}
+      {showSocialModal && (
+        <Modal
+          title={isEditingSocial ? 'Edit Social Link' : 'Add Social Link'}
+          onClose={() => {
+            setShowSocialModal(false);
+            setCustomPlatform('');
+          }}
+          actions={
+            <>
+              <button className="btn btn-ghost btn-sm" onClick={() => {
+                setShowSocialModal(false);
+                setCustomPlatform('');
+              }}>Cancel</button>
+              <button className="btn btn-teal btn-sm" onClick={handleSaveSocialLink}>Save</button>
+            </>
+          }
+        >
+          <div className="gap12">
+            <div className="fg">
+              <label className="fl">Social Media Platform</label>
+              <select 
+                className="fi" 
+                value={socialForm.platform} 
+                onChange={e => setSocialForm(p => ({ ...p, platform: e.target.value }))}
+              >
+                <option value="facebook">Facebook</option>
+                <option value="instagram">Instagram</option>
+                <option value="youtube">YouTube</option>
+                <option value="x">Twitter / X</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="whatsapp">WhatsApp</option>
+                <option value="pinterest">Pinterest</option>
+                <option value="tiktok">TikTok</option>
+                <option value="threads">Threads</option>
+                <option value="custom">Other / Custom Platform</option>
+              </select>
+            </div>
+            {socialForm.platform === 'custom' && (
+              <div className="fg">
+                <label className="fl">Custom Platform Name</label>
+                <input 
+                  className="fi" 
+                  value={customPlatform} 
+                  onChange={e => setCustomPlatform(e.target.value)} 
+                  placeholder="e.g. Snapchat" 
+                  autoFocus 
+                />
+              </div>
+            )}
+            <div className="fg">
+              <label className="fl">Link URL</label>
+              <input 
+                className="fi" 
+                value={socialForm.url} 
+                onChange={e => setSocialForm(p => ({ ...p, url: e.target.value }))} 
+                placeholder="https://..." 
+              />
             </div>
           </div>
         </Modal>

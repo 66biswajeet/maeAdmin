@@ -858,6 +858,40 @@ a {
   width: 11px;
   height: 11px;
 }
+.fl-edit {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  display: flex;
+  align-items: center;
+}
+.fl-item:hover .fl-edit {
+  opacity: 1;
+}
+.fl-edit:hover {
+  color: var(--teal);
+}
+.fl-edit svg {
+  width: 11px;
+  height: 11px;
+}
+.col-del-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+.col-del-btn:hover {
+  color: var(--red);
+}
 .add-link {
   display: flex;
   align-items: center;
