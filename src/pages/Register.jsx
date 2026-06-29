@@ -31,6 +31,36 @@ export default function Register() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const getPasswordStrength = (pwd) => {
+    let score = 0;
+    if (!pwd) return { score, text: "" };
+    
+    const criteria = {
+      length: pwd.length >= 12,
+      upper: /[A-Z]/.test(pwd),
+      lower: /[a-z]/.test(pwd),
+      number: /[0-9]/.test(pwd),
+      special: /[^A-Za-z0-9]/.test(pwd),
+    };
+
+    if (criteria.length) score++;
+    if (criteria.upper) score++;
+    if (criteria.lower) score++;
+    if (criteria.number) score++;
+    if (criteria.special) score++;
+
+    let text = "Very Weak";
+    if (score === 1) text = "Very Weak";
+    else if (score === 2) text = "Weak";
+    else if (score === 3) text = "Medium";
+    else if (score === 4) text = "Good";
+    else if (score === 5) text = "Strong";
+
+    return { score, text, criteria };
+  };
+
+  const strength = getPasswordStrength(formData.password);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (
@@ -42,14 +72,19 @@ export default function Register() {
       toast.error("Please fill all fields");
       return;
     }
+
+    // Validate password complexity
+    const { criteria } = strength;
+    if (formData.password && (!criteria || !criteria.length || !criteria.upper || !criteria.lower || !criteria.number || !criteria.special)) {
+      toast.error("Password does not meet complexity requirements.");
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match");
       return;
     }
-    if (formData.password.length < 6) {
-      toast.error("Password must be at least 6 characters");
-      return;
-    }
+
     setLoading(true);
     try {
       const res = await registerAPI({
@@ -72,7 +107,14 @@ export default function Register() {
         navigate("/login");
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Registration failed");
+      const data = err.response?.data;
+      let errMsg = "Registration failed";
+      if (data?.errors && Array.isArray(data.errors)) {
+        errMsg = data.errors.map((e) => e.message).join(". ");
+      } else if (data?.message) {
+        errMsg = data.message;
+      }
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }
@@ -215,6 +257,42 @@ export default function Register() {
                   >
                     {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="pwd-strength" style={{ marginTop: "4px", marginBottom: "16px" }}>
+              {formData.password && (
+                <>
+                  <div className="pwd-bar" style={{ height: "6px", background: "#e5e7eb", borderRadius: "3px", overflow: "hidden", position: "relative", marginBottom: "6px" }}>
+                    <div style={{
+                      height: "100%",
+                      width: `${(strength.score / 5) * 100}%`,
+                      background: strength.score <= 2 ? "#ef4444" : strength.score <= 4 ? "#f59e0b" : "#10b981",
+                      transition: "width 0.3s ease, background 0.3s ease"
+                    }} />
+                  </div>
+                  <div className="pwd-label" style={{ marginBottom: "10px", fontSize: "0.80rem", fontWeight: "600", color: strength.score <= 2 ? "#ef4444" : strength.score <= 4 ? "#d97706" : "#059669" }}>
+                    Password Strength: {strength.text}
+                  </div>
+                </>
+              )}
+
+              <div style={{ fontSize: "0.8rem", color: "#6b7280", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", padding: "8px 12px", background: "#f9fafb", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+                <div style={{ color: strength.criteria?.length ? "#10b981" : "#9ca3af", transition: "color 0.2s ease", display: "flex", alignItems: "center", gap: "4px" }}>
+                  <span>{strength.criteria?.length ? "✓" : "○"}</span> Min 12 characters
+                </div>
+                <div style={{ color: strength.criteria?.upper ? "#10b981" : "#9ca3af", transition: "color 0.2s ease", display: "flex", alignItems: "center", gap: "4px" }}>
+                  <span>{strength.criteria?.upper ? "✓" : "○"}</span> One uppercase letter
+                </div>
+                <div style={{ color: strength.criteria?.lower ? "#10b981" : "#9ca3af", transition: "color 0.2s ease", display: "flex", alignItems: "center", gap: "4px" }}>
+                  <span>{strength.criteria?.lower ? "✓" : "○"}</span> One lowercase letter
+                </div>
+                <div style={{ color: strength.criteria?.number ? "#10b981" : "#9ca3af", transition: "color 0.2s ease", display: "flex", alignItems: "center", gap: "4px" }}>
+                  <span>{strength.criteria?.number ? "✓" : "○"}</span> One number
+                </div>
+                <div style={{ color: strength.criteria?.special ? "#10b981" : "#9ca3af", transition: "color 0.2s ease", display: "flex", alignItems: "center", gap: "4px" }}>
+                  <span>{strength.criteria?.special ? "✓" : "○"}</span> One special character
                 </div>
               </div>
             </div>

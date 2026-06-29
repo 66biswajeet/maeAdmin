@@ -285,13 +285,15 @@ export default function AdminEditProductPage() {
   };
 
   // Handle Cloudinary image upload
+  // Cloudinary images are already hosted — treat them as existing images
+  // directly so they appear under "Current Images" and are NOT double-listed
+  // under "New Images". This also prevents [object Object] in FormData.
   const handleCloudinaryImageUpload = (cloudinaryUrl) => {
     if (cloudinaryUrl) {
-      setNewImages((prev) => [
+      setExistingImages((prev) => [
         ...prev,
         { url: cloudinaryUrl, alt: formData.title || "Product image" },
       ]);
-      setPreviewImages((prev) => [...prev, cloudinaryUrl]);
       toast.success("Image uploaded successfully!");
     }
   };
@@ -457,14 +459,21 @@ export default function AdminEditProductPage() {
         submitData.append("empanelment", "");
       }
 
-      // Add new images
+      // Add new File objects (local uploads) to FormData
+      // Cloudinary-uploaded images are already in existingImages — skip them here
       newImages.forEach((img) => {
-        submitData.append("images", img);
+        if (img instanceof File) {
+          submitData.append("images", img);
+        }
       });
 
-      // Add existing image IDs to keep
+      // Send existing images (including newly Cloudinary-uploaded ones) to keep
+      // Normalise each entry to { url, alt } so the backend always gets objects
       if (existingImages.length > 0) {
-        submitData.append("keepImages", JSON.stringify(existingImages));
+        const normalised = existingImages.map((img) =>
+          typeof img === "string" ? { url: img, alt: "Product image" } : { url: img.url || img, alt: img.alt || "Product image" }
+        );
+        submitData.append("keepImages", JSON.stringify(normalised));
       }
 
       const response = await axios.patch(
@@ -956,7 +965,7 @@ export default function AdminEditProductPage() {
               <div className="images-grid">
                 {existingImages.map((img, index) => (
                   <div key={index} className="image-item">
-                    <img src={img} alt={`Product ${index}`} />
+                    <img src={img?.url ?? img} alt={img?.alt || `Product ${index}`} />
                     <button
                       type="button"
                       onClick={() => removeExistingImage(index)}

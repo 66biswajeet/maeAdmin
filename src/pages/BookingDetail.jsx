@@ -283,12 +283,15 @@ export default function BookingDetail() {
 
   const vendor = booking.vendor || {};
   const customer = booking.customer || {};
-  const canAccept =
-    booking.status === "pending" || booking.status === "in_progress";
-  const canComplete =
-    booking.status === "accepted" || booking.status === "in_progress";
-  const canCancel =
-    booking.status !== "cancelled" && booking.status !== "completed";
+  const isAdmin = !!localStorage.getItem("token");
+  const canVendorStart =
+    !isAdmin &&
+    (booking.status === "pending" ||
+      booking.status === "approved" ||
+      booking.status === "accepted");
+  const canVendorComplete =
+    !isAdmin &&
+    (booking.status === "in_progress" || booking.status === "accepted");
 
   return (
     <div className="booking-page">
@@ -300,37 +303,46 @@ export default function BookingDetail() {
             Back to Bookings
           </button>
           <div className="bd-action-row">
-            {canAccept && (
-              <button
-                id="bd-accept-btn"
-                className="bd-btn bd-btn--accept"
-                onClick={() => changeStatus("accepted")}
-                disabled={updating}
-              >
-                <CheckCircle size={14} />
-                Accept
-              </button>
+            {isAdmin && (
+              <div className="bd-status-select-container">
+                <span className="bd-status-label">Update Status:</span>
+                <select
+                  id="bd-status-select"
+                  className="bd-status-select"
+                  value={booking.status || ""}
+                  onChange={(e) => changeStatus(e.target.value)}
+                  disabled={updating}
+                >
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="accepted">Accepted</option>
+                  <option value="in_progress">In Progress / Processing</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="cancellation_requested">Cancellation Requested</option>
+                </select>
+              </div>
             )}
-            {canComplete && (
+            {canVendorStart && (
               <button
-                id="bd-complete-btn"
+                id="bd-start-btn"
                 className="bd-btn bd-btn--complete"
-                onClick={() => changeStatus("completed")}
+                onClick={() => changeStatus("in_progress")}
                 disabled={updating}
               >
                 <TrendingUp size={14} />
-                Mark Completed
+                Start / Processing
               </button>
             )}
-            {canCancel && (
+            {canVendorComplete && (
               <button
-                id="bd-cancel-btn"
-                className="bd-btn bd-btn--cancel"
-                onClick={() => changeStatus("cancelled")}
+                id="bd-complete-btn"
+                className="bd-btn bd-btn--accept"
+                onClick={() => changeStatus("completed")}
                 disabled={updating}
               >
-                <XCircle size={14} />
-                Cancel
+                <CheckCircle size={14} />
+                Complete
               </button>
             )}
             {updating && <RefreshCw size={15} className="animate-spin" />}

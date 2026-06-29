@@ -37,6 +37,8 @@ import VendorBookingDetail from "./pages/BookingDetail";
 import EmailTemplatesPage from "./pages/EmailTemplatesPage";
 import AdminVendorDetailsPage from "./pages/AdminVendorDetailsPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminPagesPage from "./pages/AdminPagesPage";
+import AdminPageForm from "./pages/AdminPageForm";
 
 import "./App.css";
 
@@ -165,6 +167,10 @@ export default function App() {
           <Route path="settings/meta" element={<MetaSettingsPage />} />
           <Route path="settings/bill-template" element={<BillTemplatePage />} />
           <Route path="settings/email-templates" element={<EmailTemplatesPage />} />
+          <Route path="settings/pages" element={<AdminPagesPage />} />
+          <Route path="settings/pages/create-static" element={<AdminPageForm />} />
+          <Route path="settings/pages/create-blog" element={<AdminPageForm />} />
+          <Route path="settings/pages/edit/:id" element={<AdminPageForm />} />
           <Route path="settings/profile" element={<ProfileSettings />} />
           <Route path="*" element={<Navigate to="/settings/site" replace />} />
         </Route>

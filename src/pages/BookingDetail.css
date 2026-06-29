@@ -54,6 +54,36 @@
   flex-wrap: wrap;
 }
 
+.bd-status-select-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bd-status-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.bd-status-select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.bd-status-select:focus {
+  border-color: var(--teal);
+}
+
 /* ── Back button ──────────────────────────────────────────────── */
 .btn-back {
   display: inline-flex;
@@ -229,6 +259,7 @@
 }
 
 .status-badge--cancelled,
+.status-badge--cancellation_requested,
 .status-badge--failed,
 .status-badge--rejected {
   background: rgba(239, 68, 68, 0.08);

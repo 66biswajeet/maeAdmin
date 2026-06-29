@@ -153,13 +153,47 @@ export default function VendorRegisterPage() {
     setShowCityDropdown(false);
   };
 
+  const getPasswordStrength = (pwd) => {
+    let score = 0;
+    if (!pwd) return { score, text: "" };
+    
+    const criteria = {
+      length: pwd.length >= 12,
+      upper: /[A-Z]/.test(pwd),
+      lower: /[a-z]/.test(pwd),
+      number: /[0-9]/.test(pwd),
+      special: /[^A-Za-z0-9]/.test(pwd),
+    };
+
+    if (criteria.length) score++;
+    if (criteria.upper) score++;
+    if (criteria.lower) score++;
+    if (criteria.number) score++;
+    if (criteria.special) score++;
+
+    let text = "Very Weak";
+    if (score === 1) text = "Very Weak";
+    else if (score === 2) text = "Weak";
+    else if (score === 3) text = "Medium";
+    else if (score === 4) text = "Good";
+    else if (score === 5) text = "Strong";
+
+    return { score, text, criteria };
+  };
+
+  const strength = getPasswordStrength(form.password);
+
   const validateStep1 = () => {
     if (!form.name.trim()) return "Full name is required";
     if (!form.email.trim()) return "Email is required";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
       return "Enter a valid email";
-    if (form.password.length < 6)
-      return "Password must be at least 6 characters";
+    
+    const { criteria } = strength;
+    if (form.password && (!criteria || !criteria.length || !criteria.upper || !criteria.lower || !criteria.number || !criteria.special)) {
+      return "Password does not meet complexity requirements.";
+    }
+
     if (form.password !== form.confirmPassword) return "Passwords do not match";
     return null;
   };
@@ -202,10 +236,14 @@ export default function VendorRegisterPage() {
       });
       setSuccess(true);
     } catch (err) {
-      setError(
-        err?.response?.data?.message ||
-          "Registration failed. Please try again.",
-      );
+      const data = err?.response?.data;
+      let errMsg = "Registration failed. Please try again.";
+      if (data?.errors && Array.isArray(data.errors)) {
+        errMsg = data.errors.map((e) => e.message).join(". ");
+      } else if (data?.message) {
+        errMsg = data.message;
+      }
+      setError(errMsg);
     } finally {
       setLoading(false);
     }
@@ -336,7 +374,7 @@ export default function VendorRegisterPage() {
                   <div className="vr-pass-wrap">
                     <input
                       type={showPass ? "text" : "password"}
-                      placeholder="Min. 6 characters"
+                      placeholder="Create a strong password"
                       value={form.password}
                       onChange={(e) => set("password", e.target.value)}
                     />
@@ -346,6 +384,42 @@ export default function VendorRegisterPage() {
                     >
                       {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
+                  </div>
+                  
+                  <div className="pwd-strength" style={{ marginTop: "10px" }}>
+                    {form.password && (
+                      <>
+                        <div className="pwd-bar" style={{ height: "5px", background: "#e5e7eb", borderRadius: "3px", overflow: "hidden", position: "relative", marginBottom: "6px" }}>
+                          <div style={{
+                            height: "100%",
+                            width: `${(strength.score / 5) * 100}%`,
+                            background: strength.score <= 2 ? "#ef4444" : strength.score <= 4 ? "#f59e0b" : "#10b981",
+                            transition: "width 0.3s ease, background 0.3s ease"
+                          }} />
+                        </div>
+                        <div className="pwd-label" style={{ marginBottom: "8px", fontSize: "0.75rem", fontWeight: "600", color: strength.score <= 2 ? "#ef4444" : strength.score <= 4 ? "#d97706" : "#059669" }}>
+                          Password Strength: {strength.text}
+                        </div>
+                      </>
+                    )}
+
+                    <div style={{ fontSize: "0.75rem", color: "#6b7280", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", padding: "8px", background: "#f9fafb", borderRadius: "6px", border: "1px solid #e5e7eb" }}>
+                      <div style={{ color: strength.criteria?.length ? "#10b981" : "#9ca3af", transition: "color 0.2s ease" }}>
+                        {strength.criteria?.length ? "✓" : "○"} Min 12 characters
+                      </div>
+                      <div style={{ color: strength.criteria?.upper ? "#10b981" : "#9ca3af", transition: "color 0.2s ease" }}>
+                        {strength.criteria?.upper ? "✓" : "○"} One uppercase
+                      </div>
+                      <div style={{ color: strength.criteria?.lower ? "#10b981" : "#9ca3af", transition: "color 0.2s ease" }}>
+                        {strength.criteria?.lower ? "✓" : "○"} One lowercase
+                      </div>
+                      <div style={{ color: strength.criteria?.number ? "#10b981" : "#9ca3af", transition: "color 0.2s ease" }}>
+                        {strength.criteria?.number ? "✓" : "○"} One number
+                      </div>
+                      <div style={{ color: strength.criteria?.special ? "#10b981" : "#9ca3af", transition: "color 0.2s ease" }}>
+                        {strength.criteria?.special ? "✓" : "○"} One special char
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="vr-fg">

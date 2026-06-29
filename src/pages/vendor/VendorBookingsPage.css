@@ -256,6 +256,7 @@
 .vb-status--progress  { background: #faf5ff; color: #7c3aed; border: 1px solid rgba(124,58,237,.15); }
 .vb-status--completed { background: rgba(0,201,167,.08); color: #009e84; border: 1px solid rgba(0,191,174,.2); }
 .vb-status--cancelled { background: #fef2f2; color: #ef4444; border: 1px solid rgba(239,68,68,.18); }
+.vb-status--cancellation-requested { background: #fff5f5; color: #e53e3e; border: 1px solid rgba(229,62,62,0.18); }
 
 /* body */
 .vb-card__body {

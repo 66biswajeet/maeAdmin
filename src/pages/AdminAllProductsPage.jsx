@@ -270,7 +270,6 @@ export default function AdminAllProductsPage() {
                 <th>Category</th>
                 <th>SKU</th>
                 <th>Price</th>
-                <th>Commission</th>
                 <th>Status</th>
                 <th>Featured</th>
                 <th>Best Deal</th>
@@ -301,9 +300,6 @@ export default function AdminAllProductsPage() {
                     <td className="sku">{product.sku}</td>
                     <td className="price">
                       ₹{(product.basePrice || 0).toLocaleString("en-IN")}
-                    </td>
-                    <td className="commission">
-                      {product.commission?.toFixed(2) || 0}%
                     </td>
                     <td>
                       <span

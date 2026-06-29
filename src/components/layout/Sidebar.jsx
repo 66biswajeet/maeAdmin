@@ -87,6 +87,7 @@ const navItems = [
       { label: "Meta Settings", path: "/settings/meta" },
       { label: "Bill Template", path: "/settings/bill-template" },
       { label: "Email Templates", path: "/settings/email-templates" },
+      { label: "Pages", path: "/settings/pages" },
       { label: "Profile Settings", path: "/settings/profile" },
     ],
   },

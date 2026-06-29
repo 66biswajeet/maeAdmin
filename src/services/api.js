@@ -163,4 +163,12 @@ export const markNotificationRead = (id) => API.patch(`/notifications/${id}/read
 export const markAllNotificationsRead = () => API.patch("/notifications/read-all");
 export const deleteNotification = (id) => API.delete(`/notifications/${id}`);
 
+// ── Pages (CMS) ─────────────────────────────────────────────────────────────
+export const getPages = (params) => API.get("/pages", { params });
+export const getPage = (id) => API.get(`/pages/${id}`);
+export const createPage = (data) => API.post("/pages", data);
+export const updatePage = (id, data) => API.patch(`/pages/${id}`, data);
+export const togglePublishPage = (id) => API.patch(`/pages/${id}/toggle-publish`);
+export const deletePage = (id) => API.delete(`/pages/${id}`);
+
 export default API;

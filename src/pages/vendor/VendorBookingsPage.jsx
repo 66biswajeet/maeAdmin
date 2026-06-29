@@ -37,7 +37,6 @@ const STATUS_OPTS = [
   { value: "accepted", label: "Accepted" },
   { value: "in_progress", label: "In Progress" },
   { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
 ];
 
 const PAGE_SIZE = 12;
@@ -50,6 +49,7 @@ function StatusBadge({ status }) {
     in_progress: "vb-status--progress",
     completed: "vb-status--completed",
     cancelled: "vb-status--cancelled",
+    cancellation_requested: "vb-status--cancellation-requested",
   };
   return (
     <span className={`vb-status ${map[status] || "vb-status--pending"}`}>
@@ -248,10 +248,12 @@ export default function VendorBookingsPage() {
           <div className="vb-cards">
             {paginated.map((b) => {
               const isUpdating = updating === b._id;
-              const canAccept = b.status === "pending";
-              const canProgress = b.status === "accepted";
-              const canComplete = b.status === "accepted" || b.status === "in_progress";
-              const canCancel = b.status !== "cancelled" && b.status !== "completed";
+              const canProgress =
+                b.status === "pending" ||
+                b.status === "approved" ||
+                b.status === "accepted";
+              const canComplete =
+                b.status === "in_progress" || b.status === "accepted";
 
               const customerName = b.customer?.name || "—";
               const customerEmail = b.customer?.email || "";
@@ -324,16 +326,6 @@ export default function VendorBookingsPage() {
                       </div>
                     </div>
                     <div className="vb-card__actions">
-                      {canAccept && (
-                        <button
-                          id={`vb-accept-${b._id}`}
-                          className="vb-btn vb-btn--accept"
-                          disabled={isUpdating}
-                          onClick={() => changeStatus(b._id, "accepted")}
-                        >
-                          <CheckCircle size={12} /> Accept
-                        </button>
-                      )}
                       {canProgress && (
                         <button
                           id={`vb-progress-${b._id}`}
@@ -352,17 +344,6 @@ export default function VendorBookingsPage() {
                           onClick={() => changeStatus(b._id, "completed")}
                         >
                           <CheckCircle size={12} /> Complete
-                        </button>
-                      )}
-                      {canCancel && (
-                        <button
-                          id={`vb-cancel-${b._id}`}
-                          className="vb-btn vb-btn--cancel"
-                          disabled={isUpdating}
-                          onClick={() => changeStatus(b._id, "cancelled")}
-                          title="Cancel order"
-                        >
-                          <XCircle size={12} />
                         </button>
                       )}
                       <button

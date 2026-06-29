@@ -47,10 +47,12 @@ const fmtTime = (d) => {
 const STATUS_OPTS = [
   { value: "", label: "All Statuses" },
   { value: "pending", label: "Pending" },
+  { value: "approved", label: "Approved" },
   { value: "accepted", label: "Accepted" },
   { value: "in_progress", label: "In Progress" },
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
+  { value: "cancellation_requested", label: "Cancellation Requested" },
 ];
 
 const PAGE_SIZE = 15;
@@ -85,6 +87,11 @@ function StatusBadge({ status }) {
     },
     cancelled: {
       bg: "#fef2f2",
+      color: "#ef4444",
+      border: "1px solid rgba(239,68,68,0.18)",
+    },
+    cancellation_requested: {
+      bg: "#fff5f5",
       color: "#ef4444",
       border: "1px solid rgba(239,68,68,0.18)",
     },
