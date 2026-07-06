@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, Plus, Trash2, DollarSign } from "lucide-react";
+import { ArrowLeft, Upload, Plus, Trash2, DollarSign, Star, Edit2, Check, X as XIcon } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import RichTextEditor from "../components/RichTextEditor";
 import CloudinaryUpload from "../components/CloudinaryUpload";
-import { getCategoryEmpanelments } from "../services/api";
+import { getCategoryEmpanelments, getProductReviews, createCustomReview, updateReview, deleteReview, approveReview, rejectReview } from "../services/api";
 import "./AdminEditProductPage.css";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
@@ -49,9 +49,119 @@ export default function AdminEditProductPage() {
     isAvailable: true,
   });
 
+  // ── Reviews State ──────────────────────────────────────────────────
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsSectionOpen, setReviewsSectionOpen] = useState(false);
+  const [editingReviewId, setEditingReviewId] = useState(null);
+  const [editReviewData, setEditReviewData] = useState({});
+  const [customReviewForm, setCustomReviewForm] = useState({
+    customDisplayName: "",
+    rating: 5,
+    title: "",
+    body: "",
+  });
+  const [customReviewHover, setCustomReviewHover] = useState(0);
+  const [customReviewSubmitting, setCustomReviewSubmitting] = useState(false);
+
+  const fetchProductReviews = async () => {
+    if (!productId) return;
+    setReviewsLoading(true);
+    try {
+      const res = await getProductReviews(productId);
+      setReviews(res.data || []);
+    } catch {
+      toast.error("Failed to load reviews");
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  const handleToggleReviewsSection = () => {
+    if (!reviewsSectionOpen) fetchProductReviews();
+    setReviewsSectionOpen(p => !p);
+  };
+
+  const handleStartEditReview = (rv) => {
+    setEditingReviewId(rv._id);
+    setEditReviewData({
+      customDisplayName: rv.customDisplayName || rv.displayName || "",
+      rating:            rv.rating,
+      title:             rv.title  || "",
+      body:              rv.body   || "",
+    });
+  };
+
+  const handleSaveEditReview = async (id) => {
+    try {
+      await updateReview(id, editReviewData);
+      toast.success("Review updated");
+      setEditingReviewId(null);
+      fetchProductReviews();
+    } catch {
+      toast.error("Failed to update review");
+    }
+  };
+
+  const handleDeleteReview = async (id) => {
+    if (!window.confirm("Delete this review? This cannot be undone.")) return;
+    try {
+      await deleteReview(id);
+      toast.success("Review deleted");
+      fetchProductReviews();
+    } catch {
+      toast.error("Failed to delete review");
+    }
+  };
+
+  const handleApproveReview = async (id) => {
+    try {
+      await approveReview(id);
+      toast.success("Review approved");
+      fetchProductReviews();
+    } catch {
+      toast.error("Failed to approve review");
+    }
+  };
+
+  const handleRejectReview = async (id) => {
+    try {
+      await rejectReview(id);
+      toast.success("Review rejected");
+      fetchProductReviews();
+    } catch {
+      toast.error("Failed to reject review");
+    }
+  };
+
+  const handleSubmitCustomReview = async (e) => {
+    e.preventDefault();
+    if (!customReviewForm.customDisplayName.trim()) {
+      toast.error("Display name is required");
+      return;
+    }
+    if (!customReviewForm.body.trim()) {
+      toast.error("Comment is required");
+      return;
+    }
+    setCustomReviewSubmitting(true);
+    try {
+      await createCustomReview({ productId, ...customReviewForm });
+      toast.success("Custom review posted!");
+      setCustomReviewForm({ customDisplayName: "", rating: 5, title: "", body: "" });
+      fetchProductReviews();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to post review");
+    } finally {
+      setCustomReviewSubmitting(false);
+    }
+  };
+
   const [deliverableInput, setDeliverableInput] = useState("");
   const [expandedCategories, setExpandedCategories] = useState(new Set());
   const [categoryEmpanelments, setCategoryEmpanelments] = useState([]);
+  const [vendorId, setVendorId] = useState("");
+  const [vendorEmpanelmentIds, setVendorEmpanelmentIds] = useState([]);
 
   // Zone options
   const ZONE_OPTIONS = [
@@ -106,6 +216,12 @@ export default function AdminEditProductPage() {
             ? [product.empanelment._id || product.empanelment]
             : [],
         });
+
+        // Store vendor ID so we can fetch their empanelments
+        const vendorField = product.vendor;
+        if (vendorField) {
+          setVendorId(typeof vendorField === "object" ? vendorField._id : vendorField);
+        }
 
         if (product.images && product.images.length > 0) {
           setExistingImages(product.images);
@@ -259,6 +375,34 @@ export default function AdminEditProductPage() {
     );
   };
 
+  // Fetch vendor empanelments when vendor changes
+  useEffect(() => {
+    if (!vendorId || !token) return;
+    const fetchVendorEmpanelments = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/vendors/${vendorId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const v = res.data?.vendor || res.data;
+        const ids = (v?.empanelment || []).map((e) =>
+          typeof e === "object" ? e._id : e
+        );
+        setVendorEmpanelmentIds(ids);
+        // Auto-merge vendor empanelments into formData
+        if (ids.length > 0) {
+          setFormData((prev) => ({
+            ...prev,
+            empanelment: Array.from(new Set([...ids, ...(prev.empanelment || [])])),
+          }));
+        }
+      } catch {
+        setVendorEmpanelmentIds([]);
+      }
+    };
+    fetchVendorEmpanelments();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vendorId]);
+
   // Fetch empanelments when categories change
   useEffect(() => {
     const fetchCategoryEmpanelments = async () => {
@@ -267,8 +411,23 @@ export default function AdminEditProductPage() {
         return;
       }
       try {
-        const res = await getCategoryEmpanelments(formData.categories[0]);
-        setCategoryEmpanelments(res.data || []);
+        // Fetch empanelments for every selected category in parallel
+        const results = await Promise.all(
+          formData.categories.map((catId) => getCategoryEmpanelments(catId))
+        );
+        // Merge & deduplicate by _id
+        const seen = new Set();
+        const merged = [];
+        results.forEach((res) => {
+          (res.data || []).forEach((emp) => {
+            if (!seen.has(emp._id)) {
+              seen.add(emp._id);
+              merged.push(emp);
+            }
+          });
+        });
+        merged.sort((a, b) => a.empanelmentName.localeCompare(b.empanelmentName));
+        setCategoryEmpanelments(merged);
       } catch {
         setCategoryEmpanelments([]);
       }
@@ -666,30 +825,41 @@ export default function AdminEditProductPage() {
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
                   {categoryEmpanelments.map((emp) => {
                     const isSelected = (formData.empanelment || []).includes(emp._id);
+                    const isVendorOwned = vendorEmpanelmentIds.includes(emp._id);
                     return (
                       <label
                         key={emp._id}
+                        title={isVendorOwned ? "This empanelment belongs to the product vendor and cannot be removed" : undefined}
                         style={{
                           display: "flex",
                           alignItems: "center",
                           gap: 6,
                           fontSize: "0.8rem",
-                          cursor: "pointer",
+                          cursor: isVendorOwned ? "not-allowed" : "pointer",
                           padding: "6px 14px",
                           borderRadius: 20,
-                          border: `1.5px solid ${isSelected ? "#0ea5e9" : "#e2e8f0"}`,
-                          background: isSelected ? "#e0f2fe" : "#f8fafc",
-                          color: isSelected ? "#0369a1" : "#64748b",
-                          fontWeight: isSelected ? 600 : 400,
+                          border: isVendorOwned
+                            ? "2px solid #f59e0b"
+                            : `1.5px solid ${isSelected ? "#0ea5e9" : "#e2e8f0"}`,
+                          background: isVendorOwned
+                            ? "#fef3c7"
+                            : isSelected ? "#e0f2fe" : "#f8fafc",
+                          color: isVendorOwned
+                            ? "#92400e"
+                            : isSelected ? "#0369a1" : "#64748b",
+                          fontWeight: (isSelected || isVendorOwned) ? 600 : 400,
                           transition: "all 0.15s",
+                          userSelect: "none",
                         }}
                       >
                         <input
                           type="checkbox"
                           name="empanelment-edit"
                           checked={isSelected}
+                          disabled={isVendorOwned}
                           style={{ display: "none" }}
-                          onChange={() =>
+                          onChange={() => {
+                            if (isVendorOwned) return;
                             setFormData((prev) => {
                               const current = prev.empanelment || [];
                               const isSel = current.includes(emp._id);
@@ -699,16 +869,22 @@ export default function AdminEditProductPage() {
                                   ? current.filter((id) => id !== emp._id)
                                   : [...current, emp._id],
                               };
-                            })
-                          }
+                            });
+                          }}
                         />
+                        {isVendorOwned && (
+                          <span style={{ fontSize: "11px" }} title="Vendor empanelment — locked">🔒</span>
+                        )}
                         {emp.empanelmentName}
                       </label>
                     );
                   })}
                 </div>
                 <span style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: 4, display: "block" }}>
-                  Only empanelments linked to the selected category are shown
+                  Only empanelments linked to the selected category are shown.
+                  {vendorEmpanelmentIds.length > 0 && (
+                    <> &nbsp;🔒 <strong>Amber-highlighted</strong> empanelments belong to the product vendor and are locked.</>
+                  )}
                 </span>
               </div>
             )}
@@ -1063,6 +1239,235 @@ export default function AdminEditProductPage() {
           </button>
         </div>
       </form>
+
+      {/* ════════════════════════════════════════════════════════
+          PRODUCT REVIEWS SECTION  (outside form to avoid submit conflicts)
+      ════════════════════════════════════════════════════════ */}
+      <section className="form-section admin-reviews-section">
+        <div className="admin-reviews-header" onClick={handleToggleReviewsSection}>
+          <h2>
+            <Star size={18} style={{ marginRight: 8, verticalAlign: 'middle', color: '#f59e0b' }} />
+            Product Reviews
+            {reviews.length > 0 && (
+              <span className="admin-reviews-badge">{reviews.length}</span>
+            )}
+          </h2>
+          <button type="button" className="admin-reviews-toggle-btn">
+            {reviewsSectionOpen ? '▲ Collapse' : '▼ Expand'}
+          </button>
+        </div>
+
+        {reviewsSectionOpen && (
+          <div className="admin-reviews-body">
+            {/* ── Existing Reviews List ──────────────────────── */}
+            <h3 className="admin-reviews-sub-title">All Reviews</h3>
+
+            {reviewsLoading ? (
+              <p className="admin-reviews-loading">Loading reviews...</p>
+            ) : reviews.length === 0 ? (
+              <p className="admin-reviews-empty">No reviews yet for this product.</p>
+            ) : (
+              <div className="admin-review-list">
+                {reviews.map((rv) => (
+                  <div key={rv._id} className={`admin-review-item ${rv.isCustom ? 'is-custom' : ''}`}>
+                    {editingReviewId === rv._id ? (
+                      /* ── Inline Edit Mode ── */
+                      <div className="admin-review-edit-form">
+                        <div className="admin-review-edit-row">
+                          <label>Display Name</label>
+                          <input
+                            type="text"
+                            value={editReviewData.customDisplayName}
+                            onChange={e => setEditReviewData(p => ({ ...p, customDisplayName: e.target.value }))}
+                            placeholder="Name shown to customers"
+                            className="admin-review-input"
+                          />
+                        </div>
+                        <div className="admin-review-edit-row">
+                          <label>Rating</label>
+                          <div className="admin-star-picker">
+                            {[1,2,3,4,5].map(s => (
+                              <button
+                                key={s}
+                                type="button"
+                                className={`admin-star-btn ${s <= editReviewData.rating ? 'active' : ''}`}
+                                onClick={() => setEditReviewData(p => ({ ...p, rating: s }))}
+                              >★</button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="admin-review-edit-row">
+                          <label>Title</label>
+                          <input
+                            type="text"
+                            value={editReviewData.title}
+                            onChange={e => setEditReviewData(p => ({ ...p, title: e.target.value }))}
+                            placeholder="Review title (optional)"
+                            className="admin-review-input"
+                          />
+                        </div>
+                        <div className="admin-review-edit-row">
+                          <label>Comment</label>
+                          <textarea
+                            value={editReviewData.body}
+                            onChange={e => setEditReviewData(p => ({ ...p, body: e.target.value }))}
+                            rows={3}
+                            className="admin-review-textarea"
+                            placeholder="Review comment"
+                          />
+                        </div>
+                        <div className="admin-review-edit-actions">
+                          <button
+                            type="button"
+                            className="admin-review-btn admin-review-btn--save"
+                            onClick={() => handleSaveEditReview(rv._id)}
+                          >
+                            <Check size={14} /> Save
+                          </button>
+                          <button
+                            type="button"
+                            className="admin-review-btn admin-review-btn--cancel"
+                            onClick={() => setEditingReviewId(null)}
+                          >
+                            <XIcon size={14} /> Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* ── View Mode ── */
+                      <>
+                        <div className="admin-review-item__top">
+                          <div className="admin-review-item__avatar">
+                            {(rv.displayName || 'A')[0].toUpperCase()}
+                          </div>
+                          <div className="admin-review-item__meta">
+                            <span className="admin-review-item__name">
+                              {rv.displayName || 'Anonymous'}
+                              {rv.isCustom && <span className="admin-review-custom-badge">Custom</span>}
+                            </span>
+                            <div className="admin-review-item__stars">
+                              {[1,2,3,4,5].map(s => (
+                                <span key={s} className={`admin-star-display ${s <= rv.rating ? 'filled' : ''}`}>★</span>
+                              ))}
+                            </div>
+                          </div>
+                          <span className="admin-review-item__date">
+                            {new Date(rv.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                          </span>
+                          <span className={`admin-review-status admin-review-status--${rv.status}`}>{rv.status}</span>
+                        </div>
+                        {rv.title && <p className="admin-review-item__title">{rv.title}</p>}
+                        {rv.body  && <p className="admin-review-item__body">{rv.body}</p>}
+                        <div className="admin-review-item__actions">
+                          <button
+                            type="button"
+                            className="admin-review-btn admin-review-btn--edit"
+                            onClick={() => handleStartEditReview(rv)}
+                          >
+                            <Edit2 size={12} /> Edit
+                          </button>
+                          {rv.status !== 'approved' && (
+                            <button
+                              type="button"
+                              className="admin-review-btn admin-review-btn--approve"
+                              onClick={() => handleApproveReview(rv._id)}
+                            >Approve</button>
+                          )}
+                          {rv.status !== 'rejected' && (
+                            <button
+                              type="button"
+                              className="admin-review-btn admin-review-btn--reject"
+                              onClick={() => handleRejectReview(rv._id)}
+                            >Reject</button>
+                          )}
+                          <button
+                            type="button"
+                            className="admin-review-btn admin-review-btn--delete"
+                            onClick={() => handleDeleteReview(rv._id)}
+                          >
+                            <Trash2 size={12} /> Delete
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* ── Add Custom Review Form ─────────────────────── */}
+            <div className="admin-custom-review-form-wrap">
+              <h3 className="admin-reviews-sub-title" style={{ marginTop: 28 }}>Post a Custom Review</h3>
+              <p className="admin-custom-review-hint">
+                Custom reviews appear on the product page alongside real customer reviews. You can post multiple with different display names.
+              </p>
+              <form className="admin-custom-review-form" onSubmit={handleSubmitCustomReview}>
+                <div className="admin-custom-review-row-2col">
+                  <div className="admin-review-edit-row">
+                    <label>Display Name <span style={{color:'#ef4444'}}>*</span></label>
+                    <input
+                      type="text"
+                      value={customReviewForm.customDisplayName}
+                      onChange={e => setCustomReviewForm(p => ({ ...p, customDisplayName: e.target.value }))}
+                      placeholder="e.g. John D."
+                      className="admin-review-input"
+                      maxLength={60}
+                    />
+                  </div>
+                  <div className="admin-review-edit-row">
+                    <label>Star Rating <span style={{color:'#ef4444'}}>*</span></label>
+                    <div className="admin-star-picker">
+                      {[1,2,3,4,5].map(s => (
+                        <button
+                          key={s}
+                          type="button"
+                          className={`admin-star-btn ${s <= (customReviewHover || customReviewForm.rating) ? 'active' : ''}`}
+                          onMouseEnter={() => setCustomReviewHover(s)}
+                          onMouseLeave={() => setCustomReviewHover(0)}
+                          onClick={() => setCustomReviewForm(p => ({ ...p, rating: s }))}
+                        >★</button>
+                      ))}
+                      <span className="admin-star-label">
+                        {['','Poor','Fair','Good','Very Good','Excellent'][customReviewHover || customReviewForm.rating]}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="admin-review-edit-row">
+                  <label>Review Title (optional)</label>
+                  <input
+                    type="text"
+                    value={customReviewForm.title}
+                    onChange={e => setCustomReviewForm(p => ({ ...p, title: e.target.value }))}
+                    placeholder="e.g. Great service!"
+                    className="admin-review-input"
+                    maxLength={120}
+                  />
+                </div>
+                <div className="admin-review-edit-row">
+                  <label>Comment <span style={{color:'#ef4444'}}>*</span></label>
+                  <textarea
+                    value={customReviewForm.body}
+                    onChange={e => setCustomReviewForm(p => ({ ...p, body: e.target.value }))}
+                    rows={4}
+                    className="admin-review-textarea"
+                    placeholder="Write the review comment..."
+                    maxLength={1000}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="admin-review-btn admin-review-btn--post"
+                  disabled={customReviewSubmitting}
+                >
+                  {customReviewSubmitting ? 'Posting...' : '+ Post Custom Review'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+      </section>
     </div>
+
   );
 }

@@ -64,6 +64,11 @@ export default function AdminAddProductPage() {
 
   const selectedVendorData = vendors.find(v => v._id === form.vendor);
 
+  // Vendor's own empanelment IDs — these must always stay selected
+  const vendorEmpanelmentIds = (selectedVendorData?.empanelment || []).map(
+    (e) => (typeof e === "object" ? e._id : e)
+  );
+
   // Get zone name with city for display
   const getZoneName = (zone) => {
     const zoneLabel = ZONE_OPTIONS.find((z) => z.value === zone)?.label || zone;
@@ -237,7 +242,18 @@ export default function AdminAddProductPage() {
     );
   };
 
-  // Fetch empanelments for the selected categories
+  // When vendor changes, ensure vendor's empanelments are always in form.empanelment
+  useEffect(() => {
+    if (vendorEmpanelmentIds.length === 0) return;
+    setForm((prev) => {
+      const current = prev.empanelment || [];
+      const merged = Array.from(new Set([...vendorEmpanelmentIds, ...current]));
+      return { ...prev, empanelment: merged };
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.vendor]);
+
+  // Fetch empanelments for ALL selected categories
   useEffect(() => {
     const fetchCategoryEmpanelments = async () => {
       if (form.categories.length === 0) {
@@ -245,9 +261,23 @@ export default function AdminAddProductPage() {
         return;
       }
       try {
-        // Use the first selected category to fetch empanelments
-        const res = await getCategoryEmpanelments(form.categories[0]);
-        setCategoryEmpanelments(res.data || []);
+        // Fetch empanelments for every selected category in parallel
+        const results = await Promise.all(
+          form.categories.map((catId) => getCategoryEmpanelments(catId))
+        );
+        // Merge & deduplicate by _id
+        const seen = new Set();
+        const merged = [];
+        results.forEach((res) => {
+          (res.data || []).forEach((emp) => {
+            if (!seen.has(emp._id)) {
+              seen.add(emp._id);
+              merged.push(emp);
+            }
+          });
+        });
+        merged.sort((a, b) => a.empanelmentName.localeCompare(b.empanelmentName));
+        setCategoryEmpanelments(merged);
       } catch {
         setCategoryEmpanelments([]);
       }
@@ -966,22 +996,31 @@ export default function AdminAddProductPage() {
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
                   {categoryEmpanelments.map((emp) => {
                     const isSelected = (form.empanelment || []).includes(emp._id);
+                    const isVendorOwned = vendorEmpanelmentIds.includes(emp._id);
                     return (
                       <label
                         key={emp._id}
+                        title={isVendorOwned ? "This empanelment belongs to the selected vendor and cannot be removed" : undefined}
                         style={{
                           display: "flex",
                           alignItems: "center",
                           gap: 6,
                           fontSize: "0.8rem",
-                          cursor: "pointer",
+                          cursor: isVendorOwned ? "not-allowed" : "pointer",
                           padding: "6px 14px",
                           borderRadius: 20,
-                          border: `1.5px solid ${isSelected ? "#0ea5e9" : "#e2e8f0"}`,
-                          background: isSelected ? "#e0f2fe" : "#f8fafc",
-                          color: isSelected ? "#0369a1" : "#64748b",
-                          fontWeight: isSelected ? 600 : 400,
+                          border: isVendorOwned
+                            ? "2px solid #f59e0b"
+                            : `1.5px solid ${isSelected ? "#0ea5e9" : "#e2e8f0"}`,
+                          background: isVendorOwned
+                            ? "#fef3c7"
+                            : isSelected ? "#e0f2fe" : "#f8fafc",
+                          color: isVendorOwned
+                            ? "#92400e"
+                            : isSelected ? "#0369a1" : "#64748b",
+                          fontWeight: (isSelected || isVendorOwned) ? 600 : 400,
                           transition: "all 0.15s",
+                          userSelect: "none",
                         }}
                       >
                         <input
@@ -989,8 +1028,10 @@ export default function AdminAddProductPage() {
                           name="empanelment"
                           value={emp._id}
                           checked={isSelected}
+                          disabled={isVendorOwned}
                           style={{ display: "none" }}
-                          onChange={() =>
+                          onChange={() => {
+                            if (isVendorOwned) return;
                             setForm((prev) => {
                               const current = prev.empanelment || [];
                               const isSel = current.includes(emp._id);
@@ -1000,16 +1041,22 @@ export default function AdminAddProductPage() {
                                   ? current.filter((id) => id !== emp._id)
                                   : [...current, emp._id],
                               };
-                            })
-                          }
+                            });
+                          }}
                         />
+                        {isVendorOwned && (
+                          <span style={{ fontSize: "11px" }} title="Vendor empanelment — locked">🔒</span>
+                        )}
                         {emp.empanelmentName}
                       </label>
                     );
                   })}
                 </div>
                 <span className="form-hint" style={{ marginTop: 6, display: "block" }}>
-                  Only empanelments linked to the selected category are shown
+                  Only empanelments linked to the selected category are shown.
+                  {vendorEmpanelmentIds.length > 0 && (
+                    <> &nbsp;🔒 <strong>Amber-highlighted</strong> empanelments belong to the selected vendor and are auto-selected and locked.</>
+                  )}
                 </span>
               </div>
             </div>

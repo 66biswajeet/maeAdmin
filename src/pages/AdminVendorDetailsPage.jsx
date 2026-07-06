@@ -24,9 +24,12 @@ import {
   X,
   Upload,
   Save,
+  Search,
+  Loader2,
 } from "lucide-react";
-import API from "../services/api";
+import API, { getEmpanelments } from "../services/api";
 import toast from "react-hot-toast";
+import { searchCities } from "../services/indiaPostAPI";
 import "./AdminVendorDetailsPage.css";
 
 const STATUS_CONFIG = {
@@ -56,6 +59,7 @@ const EMPTY_FORM = {
   interestedPlan: "",
   commissionPercentage: 0,
   status: "approved",
+  empanelment: [],
 };
 
 /* ─── Edit Modal ─────────────────────────────────────────────────── */
@@ -65,6 +69,63 @@ function EditVendorModal({ vendor, onClose, onSaved }) {
   const [logoPreview, setLogoPreview] = useState("");
   const [saving, setSaving] = useState(false);
   const fileRef = useRef(null);
+
+  const [empanelments, setEmpanelments] = useState([]);
+
+  useEffect(() => {
+    const fetchEmpanelmentsList = async () => {
+      try {
+        const res = await getEmpanelments();
+        setEmpanelments(res.data || []);
+      } catch (err) {
+        console.error("Failed to load empanelments", err);
+      }
+    };
+    fetchEmpanelmentsList();
+  }, []);
+
+  // India Post City Search States
+  const [citySearchInput, setCitySearchInput] = useState("");
+  const [citySearchResults, setCitySearchResults] = useState([]);
+  const [citySearchLoading, setCitySearchLoading] = useState(false);
+  const [citySearchError, setCitySearchError] = useState("");
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+
+  const triggerCitySearch = async () => {
+    const input = citySearchInput || form.baseCity;
+    setCitySearchError("");
+
+    if (!input || input.trim().length < 2) {
+      setCitySearchError("Enter at least 2 characters");
+      setCitySearchResults([]);
+      return;
+    }
+
+    setCitySearchLoading(true);
+    setShowCityDropdown(false);
+    try {
+      const result = await searchCities(input);
+      if (result.success) {
+        setCitySearchResults(result.cities);
+        setShowCityDropdown(true);
+      } else {
+        setCitySearchError(result.error || "No cities found");
+        setCitySearchResults([]);
+      }
+    } catch (err) {
+      setCitySearchError("Error searching cities");
+      setCitySearchResults([]);
+    } finally {
+      setCitySearchLoading(false);
+    }
+  };
+
+  const handleSelectCity = (city) => {
+    setForm((prev) => ({ ...prev, baseCity: city.name }));
+    setCitySearchInput("");
+    setCitySearchResults([]);
+    setShowCityDropdown(false);
+  };
 
   // Pre-fill form on open
   useEffect(() => {
@@ -80,6 +141,11 @@ function EditVendorModal({ vendor, onClose, onSaved }) {
       interestedPlan: vendor.interestedPlan || "",
       commissionPercentage: vendor.commissionPercentage ?? 0,
       status: vendor.status || "approved",
+      empanelment: Array.isArray(vendor.empanelment)
+        ? vendor.empanelment.map((e) => (typeof e === "object" ? e._id : e))
+        : vendor.empanelment
+        ? [typeof vendor.empanelment === "object" ? vendor.empanelment._id : vendor.empanelment]
+        : [],
     });
     setLogoPreview(vendor.logoUrl || "");
     setLogoFile(null);
@@ -108,7 +174,13 @@ function EditVendorModal({ vendor, onClose, onSaved }) {
     try {
       setSaving(true);
       const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => fd.append(k, v));
+      Object.entries(form).forEach(([k, v]) => {
+        if (k === "empanelment") {
+          fd.append(k, Array.isArray(v) ? v.join(",") : v);
+        } else {
+          fd.append(k, v);
+        }
+      });
       if (logoFile) fd.append("logo", logoFile);
       await API.patch(`/vendors/${vendor._id}`, fd);
       toast.success("Vendor updated successfully");
@@ -197,9 +269,183 @@ function EditVendorModal({ vendor, onClose, onSaved }) {
               <input id="ve-phone" type="tel" value={form.phone} onChange={set("phone")} placeholder="+91 XXXXX XXXXX" />
             </div>
 
-            <div className="avd-mfg">
+            <div className="avd-mfg" style={{ position: "relative" }}>
               <label htmlFor="ve-city">Base City</label>
-              <input id="ve-city" type="text" value={form.baseCity} onChange={set("baseCity")} placeholder="City" />
+              <div
+                style={{
+                  display: "flex",
+                  gap: "6px",
+                  alignItems: "center",
+                }}
+              >
+                <div
+                  style={{
+                    flex: 1,
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <Search
+                    size={13}
+                    style={{
+                      position: "absolute",
+                      left: "10px",
+                      color: "#999",
+                      pointerEvents: "none",
+                    }}
+                  />
+                  <input
+                    id="ve-city"
+                    type="text"
+                    placeholder="Enter city name or pincode..."
+                    value={citySearchInput !== "" ? citySearchInput : form.baseCity}
+                    onChange={(e) => {
+                      setCitySearchInput(e.target.value);
+                      setForm((prev) => ({ ...prev, baseCity: e.target.value }));
+                    }}
+                    onFocus={() => {
+                      if (citySearchResults.length > 0)
+                        setShowCityDropdown(true);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        triggerCitySearch();
+                      }
+                    }}
+                    style={{
+                      paddingLeft: "32px",
+                      width: "100%",
+                    }}
+                  />
+                  {(form.baseCity || citySearchInput) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForm((prev) => ({ ...prev, baseCity: "" }));
+                        setCitySearchInput("");
+                        setCitySearchResults([]);
+                        setShowCityDropdown(false);
+                      }}
+                      style={{
+                        position: "absolute",
+                        right: "10px",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        padding: "4px",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <X size={14} color="#666" />
+                    </button>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={triggerCitySearch}
+                  disabled={citySearchLoading}
+                  style={{
+                    padding: "0 15px",
+                    height: "42px",
+                    fontSize: "13px",
+                    borderRadius: "8px",
+                    backgroundColor: "#2d5be3",
+                    color: "white",
+                    border: "none",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontWeight: "600",
+                  }}
+                >
+                  {citySearchLoading ? (
+                    <Loader2 size={14} className="spin" />
+                  ) : (
+                    <Search size={14} />
+                  )}
+                  Search
+                </button>
+              </div>
+
+              {form.baseCity && !citySearchInput && (
+                <div style={{ fontSize: "12px", color: "#059669", marginTop: "6px", fontWeight: "600" }}>
+                  Selected: {form.baseCity}
+                </div>
+              )}
+
+              {/* City search results dropdown */}
+              {showCityDropdown && citySearchResults.length > 0 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    right: 0,
+                    background: "white",
+                    border: "1px solid #ddd",
+                    borderRadius: "6px",
+                    marginTop: "4px",
+                    maxHeight: "300px",
+                    overflowY: "auto",
+                    zIndex: 1000,
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  {citySearchResults.map((city, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSelectCity(city)}
+                      style={{
+                        width: "100%",
+                        padding: "10px 12px",
+                        background: "white",
+                        border: "none",
+                        textAlign: "left",
+                        cursor: "pointer",
+                        fontSize: "14px",
+                        borderBottom: "1px solid #f0f0f0",
+                        transition: "background-color 0.2s",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.backgroundColor = "#f5f5f5")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor = "white")
+                      }
+                    >
+                      <div style={{ fontWeight: "500" }}>{city.name}</div>
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          color: "#666",
+                          marginTop: "2px",
+                        }}
+                      >
+                        {city.state}
+                        {city.pincode && ` • ${city.pincode}`}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Search error */}
+              {citySearchError && (
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#e74c3c",
+                    marginTop: "6px",
+                  }}
+                >
+                  {citySearchError}
+                </div>
+              )}
             </div>
 
             <div className="avd-mfg">
@@ -246,6 +492,61 @@ function EditVendorModal({ vendor, onClose, onSaved }) {
                 />
                 <span>%</span>
               </div>
+            </div>
+          </div>
+
+          {/* Empanelment - full width */}
+          <div className="avd-mfg avd-mfg--full" style={{ marginTop: "8px" }}>
+            <label style={{ display: "block", marginBottom: "6px", fontWeight: "600" }}>Empanelment</label>
+            <div
+              style={{
+                border: "1px solid #ddd",
+                borderRadius: "6px",
+                padding: "10px",
+                maxHeight: "150px",
+                overflowY: "auto",
+                background: "#fafafa",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+                gap: "8px",
+              }}
+            >
+              {empanelments.map((emp) => {
+                const isChecked = (form.empanelment || []).includes(emp._id);
+                return (
+                  <label
+                    key={emp._id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      color: isChecked ? "#2d5be3" : "#333",
+                      fontWeight: isChecked ? "600" : "400",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => {
+                        setForm((prev) => {
+                          const current = prev.empanelment || [];
+                          const updated = current.includes(emp._id)
+                            ? current.filter((id) => id !== emp._id)
+                            : [...current, emp._id];
+                          return { ...prev, empanelment: updated };
+                        });
+                      }}
+                      style={{ accentColor: "#2d5be3", width: "16px", height: "16px" }}
+                    />
+                    {emp.empanelmentName}
+                  </label>
+                );
+              })}
+              {empanelments.length === 0 && (
+                <div style={{ color: "#888", fontSize: "14px" }}>No empanelments found</div>
+              )}
             </div>
           </div>
 

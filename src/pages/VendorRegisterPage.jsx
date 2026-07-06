@@ -44,7 +44,7 @@ export default function VendorRegisterPage() {
     phone: "",
     baseCity: "",
     interestedPlan: "Startup / Promotion Plan",
-    empanelment: "",
+    empanelment: [],
   });
   const [empanelments, setEmpanelments] = useState([]);
   const [showSubscriptionInfo, setShowSubscriptionInfo] = useState(false);
@@ -217,10 +217,7 @@ export default function VendorRegisterPage() {
       setError("Base city/office location is required");
       return;
     }
-    if (!form.empanelment) {
-      setError("Empanelment is required");
-      return;
-    }
+    // empanelment is optional — empty array means N/A
     setError("");
     setLoading(true);
     try {
@@ -232,7 +229,7 @@ export default function VendorRegisterPage() {
         phone: form.phone,
         baseCity: form.baseCity,
         interestedPlan: form.interestedPlan,
-        empanelment: form.empanelment,
+        empanelment: form.empanelment.length > 0 ? form.empanelment : null,
       });
       setSuccess(true);
     } catch (err) {
@@ -676,20 +673,134 @@ export default function VendorRegisterPage() {
 
                 <div className="vr-fg">
                   <label>
-                    Empanelment <span>*</span>
+                    Empanelment
+                    <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: 400, marginLeft: "6px" }}>
+                      (select all that apply)
+                    </span>
                   </label>
-                  <select
-                    value={form.empanelment}
-                    onChange={(e) => set("empanelment", e.target.value)}
-                    className="vr-select"
+
+                  <div
+                    style={{
+                      border: "1px solid #d1d5db",
+                      borderRadius: "10px",
+                      padding: "8px 0",
+                      maxHeight: "220px",
+                      overflowY: "auto",
+                      background: "#fff",
+                    }}
                   >
-                    <option value="">Select Empanelment</option>
-                    {empanelments.map((emp) => (
-                      <option key={emp._id} value={emp._id}>
-                        {emp.empanelmentName}
-                      </option>
-                    ))}
-                  </select>
+                    {/* N/A option */}
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        padding: "8px 14px",
+                        cursor: "pointer",
+                        fontSize: "14px",
+                        color: form.empanelment.length === 0 ? "#0ea5e9" : "#374151",
+                        fontWeight: form.empanelment.length === 0 ? "600" : "400",
+                        borderBottom: "1px solid #f3f4f6",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={form.empanelment.length === 0}
+                        onChange={() => {
+                          // Checking N/A clears all selections
+                          setForm((p) => ({ ...p, empanelment: [] }));
+                        }}
+                        style={{ accentColor: "#0ea5e9", width: "16px", height: "16px" }}
+                      />
+                      N/A — No empanelment
+                    </label>
+
+                    {/* Empanelment options */}
+                    {empanelments.map((emp) => {
+                      const isChecked = form.empanelment.includes(emp._id);
+                      return (
+                        <label
+                          key={emp._id}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "10px",
+                            padding: "8px 14px",
+                            cursor: "pointer",
+                            fontSize: "14px",
+                            color: isChecked ? "#0ea5e9" : "#374151",
+                            fontWeight: isChecked ? "600" : "400",
+                            borderBottom: "1px solid #f3f4f6",
+                            transition: "background 0.15s",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "#f0f9ff")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => {
+                              setForm((p) => {
+                                const current = p.empanelment;
+                                const updated = current.includes(emp._id)
+                                  ? current.filter((id) => id !== emp._id)
+                                  : [...current, emp._id];
+                                return { ...p, empanelment: updated };
+                              });
+                            }}
+                            style={{ accentColor: "#0ea5e9", width: "16px", height: "16px" }}
+                          />
+                          {emp.empanelmentName}
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  {/* Selected summary */}
+                  {form.empanelment.length > 0 && (
+                    <div style={{ marginTop: "8px", display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                      {form.empanelment.map((id) => {
+                        const emp = empanelments.find((e) => e._id === id);
+                        return emp ? (
+                          <span
+                            key={id}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              background: "#dbeafe",
+                              color: "#1d4ed8",
+                              borderRadius: "20px",
+                              padding: "2px 10px",
+                              fontSize: "12px",
+                              fontWeight: "600",
+                            }}
+                          >
+                            {emp.empanelmentName}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setForm((p) => ({
+                                  ...p,
+                                  empanelment: p.empanelment.filter((eid) => eid !== id),
+                                }))
+                              }
+                              style={{
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                padding: 0,
+                                lineHeight: 1,
+                                color: "#1d4ed8",
+                              }}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 <div className="vr-notice">

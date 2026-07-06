@@ -231,7 +231,7 @@ export default function VendorAddProductPage() {
     );
   };
 
-  // Fetch empanelments for the selected categories
+  // Fetch empanelments for ALL selected categories
   useEffect(() => {
     const fetchCategoryEmpanelments = async () => {
       if (form.categories.length === 0) {
@@ -239,8 +239,23 @@ export default function VendorAddProductPage() {
         return;
       }
       try {
-        const res = await getCategoryEmpanelments(form.categories[0]);
-        setCategoryEmpanelments(res.data || []);
+        // Fetch empanelments for every selected category in parallel
+        const results = await Promise.all(
+          form.categories.map((catId) => getCategoryEmpanelments(catId))
+        );
+        // Merge & deduplicate by _id
+        const seen = new Set();
+        const merged = [];
+        results.forEach((res) => {
+          (res.data || []).forEach((emp) => {
+            if (!seen.has(emp._id)) {
+              seen.add(emp._id);
+              merged.push(emp);
+            }
+          });
+        });
+        merged.sort((a, b) => a.empanelmentName.localeCompare(b.empanelmentName));
+        setCategoryEmpanelments(merged);
       } catch {
         setCategoryEmpanelments([]);
       }

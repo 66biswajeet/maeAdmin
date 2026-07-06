@@ -171,4 +171,13 @@ export const updatePage = (id, data) => API.patch(`/pages/${id}`, data);
 export const togglePublishPage = (id) => API.patch(`/pages/${id}/toggle-publish`);
 export const deletePage = (id) => API.delete(`/pages/${id}`);
 
+// ── Reviews (admin) ─────────────────────────────────────────────────────────
+export const getProductReviews  = (productId) => API.get(`/reviews/product/${productId}`);
+export const getAllReviews       = (params)    => API.get(`/reviews`, { params });
+export const createCustomReview = (data)      => API.post(`/reviews/admin`, data);
+export const updateReview       = (id, data)  => API.patch(`/reviews/${id}`, data);
+export const deleteReview       = (id)        => API.delete(`/reviews/${id}`);
+export const approveReview      = (id)        => API.patch(`/reviews/${id}/approve`);
+export const rejectReview       = (id)        => API.patch(`/reviews/${id}/reject`);
+
 export default API;

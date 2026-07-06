@@ -275,10 +275,12 @@ export default function VendorsPage() {
           {filtered.map((vendor) => {
             const sc = STATUS_CONFIG[vendor.status] || STATUS_CONFIG.requested;
             const StatusIcon = sc.icon;
-            const empName =
-              vendor.empanelment && typeof vendor.empanelment === "object"
+            const empName = Array.isArray(vendor.empanelment) && vendor.empanelment.length > 0
+              ? vendor.empanelment.map((e) => typeof e === "object" ? (e.empanelmentName || e.name) : empanelmentsMap[e]).filter(Boolean).join(", ")
+              : (!Array.isArray(vendor.empanelment) && vendor.empanelment && typeof vendor.empanelment === "object")
                 ? vendor.empanelment.empanelmentName || vendor.empanelment.name
-                : vendor.empanelmentName || empanelmentsMap[vendor.empanelment];
+                : vendor.empanelmentName || (vendor.empanelment ? empanelmentsMap[vendor.empanelment] : null)
+                  || "N/A";
             return (
               <div key={vendor._id} className="vp-card">
                 {/* Card header stripe */}
@@ -417,7 +419,15 @@ export default function VendorsPage() {
                       </div>
                     </td>
                     <td className="vp-list__cell">{vendor.email}</td>
-                    <td className="vp-list__cell">{empanelmentsMap[vendor.empanelment] || vendor.empanelmentName || (vendor.empanelment && vendor.empanelment.empanelmentName) || '—'}</td>
+                    <td className="vp-list__cell">
+                      {Array.isArray(vendor.empanelment) && vendor.empanelment.length > 0
+                        ? vendor.empanelment.map((e, i) => (
+                          <span key={i} style={{ display: "inline-block", marginRight: "4px", background: "#dbeafe", color: "#1d4ed8", borderRadius: "12px", padding: "1px 8px", fontSize: "11px", fontWeight: 600 }}>
+                            {typeof e === "object" ? (e.empanelmentName || e.name) : (empanelmentsMap[e] || e)}
+                          </span>
+                        ))
+                        : (vendor.empanelmentName || (vendor.empanelment && !Array.isArray(vendor.empanelment) && vendor.empanelment.empanelmentName) || "N/A")}
+                    </td>
                     <td className="vp-list__cell">{vendor.phone || "—"}</td>
                     <td className="vp-list__cell vp-list__cell--center">
                       {vendor.totalProducts ?? 0}

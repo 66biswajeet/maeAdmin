@@ -183,7 +183,18 @@ export default function VendorProfilePage() {
           <h1>Vendor Profile</h1>
           <p>Manage your vendor account information and details</p>
           
-          {vendor.empanelment && (
+          {Array.isArray(vendor.empanelment) && vendor.empanelment.length > 0 && (
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "8px" }}>
+              {vendor.empanelment.map((emp, i) => (
+                <div className="empanelment-badge" key={i}>
+                  <CheckCircle size={14} />
+                  <span>Verified: {emp?.empanelmentName || emp}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {/* Legacy single-object fallback */}
+          {!Array.isArray(vendor.empanelment) && vendor.empanelment && (
             <div className="empanelment-badge">
               <CheckCircle size={14} />
               <span>Verified: {vendor.empanelment.empanelmentName}</span>
