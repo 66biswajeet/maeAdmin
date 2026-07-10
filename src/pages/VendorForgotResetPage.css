@@ -1,0 +1,109 @@
+/* ════════════════════════════════════════════
+   VendorForgotResetPage Shared Styles
+   ════════════════════════════════════════════ */
+
+/* ── Error banner ── */
+.vfr-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #ef4444;
+  border-radius: 7px;
+  color: #b91c1c;
+  font-size: 13px;
+  padding: 10px 14px;
+  line-height: 1.5;
+}
+
+/* ── Success / sent state ── */
+.vfr-sent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+}
+
+.vfr-sent__emoji {
+  font-size: 44px;
+  line-height: 1;
+}
+
+.vfr-sent__title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0d1f3c;
+  margin: 0;
+}
+
+.vfr-sent__desc {
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.vfr-sent__note {
+  font-size: 13px;
+  color: #8fa0b5;
+  margin: 0;
+}
+
+.vfr-sent__retry {
+  background: none;
+  border: none;
+  color: #00c9a7;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.vfr-sent__retry:hover {
+  color: #009e86;
+}
+
+/* ── Password strength meter ── */
+.vfr-strength {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vfr-strength__bar {
+  height: 5px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.vfr-strength__fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease, background 0.3s ease;
+}
+
+.vfr-strength__label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Criteria grid ── */
+.vfr-strength__criteria {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 8px;
+  margin-top: 4px;
+}
+
+.vfr-criterion {
+  font-size: 11px;
+  color: #9ca3af;
+  transition: color 0.2s;
+}
+
+.vfr-criterion.met {
+  color: #10b981;
+}

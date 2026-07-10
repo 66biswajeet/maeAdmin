@@ -19,6 +19,8 @@ import VendorsPage from "./pages/VendorsPage";
 import VendorRequestsPage from "./pages/VendorRequestsPage";
 import VendorRegisterPage from "./pages/VendorRegisterPage";
 import VendorLoginPage from "./pages/VendorLoginPage";
+import VendorForgotPasswordPage from "./pages/VendorForgotPasswordPage";
+import VendorResetPasswordPage from "./pages/VendorResetPasswordPage";
 import VendorDashboard from "./pages/vendor/VendorDashboard";
 import VendorProductsPage from "./pages/vendor/VendorProductsPage";
 import VendorAddProductPage from "./pages/vendor/VendorAddProductPage";
@@ -78,6 +80,8 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/vendor/login" element={<VendorLoginPage />} />
         <Route path="/vendor/register" element={<VendorRegisterPage />} />
+        <Route path="/vendor/forgot-password" element={<VendorForgotPasswordPage />} />
+        <Route path="/vendor/reset-password" element={<VendorResetPasswordPage />} />
 
         {/* Protected Vendor Routes */}
         <Route 

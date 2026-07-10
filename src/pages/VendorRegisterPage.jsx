@@ -41,7 +41,7 @@ export default function VendorRegisterPage() {
     password: "",
     confirmPassword: "",
     companyName: "",
-    phone: "",
+    phone: "+91",
     baseCity: "",
     interestedPlan: "Startup / Promotion Plan",
     empanelment: [],
@@ -217,7 +217,23 @@ export default function VendorRegisterPage() {
       setError("Base city/office location is required");
       return;
     }
-    // empanelment is optional — empty array means N/A
+
+    // Clean and validate phone number
+    let phoneNum = form.phone.trim().replace(/[\s\-()]/g, "");
+    if (!phoneNum) {
+      setError("Phone number is required");
+      return;
+    }
+    // If user enters 10 digits, auto-prepend +91
+    if (phoneNum.length === 10 && /^\d+$/.test(phoneNum)) {
+      phoneNum = "+91" + phoneNum;
+    }
+    // Check for exact +91 format followed by 10 digits
+    if (!/^\+91\d{10}$/.test(phoneNum)) {
+      setError("Phone number must start with +91 followed by a 10-digit number");
+      return;
+    }
+
     setError("");
     setLoading(true);
     try {
@@ -226,7 +242,7 @@ export default function VendorRegisterPage() {
         email: form.email,
         password: form.password,
         companyName: form.companyName,
-        phone: form.phone,
+        phone: phoneNum,
         baseCity: form.baseCity,
         interestedPlan: form.interestedPlan,
         empanelment: form.empanelment.length > 0 ? form.empanelment : null,
@@ -463,7 +479,28 @@ export default function VendorRegisterPage() {
                     type="tel"
                     placeholder="+91 98765 43210"
                     value={form.phone}
-                    onChange={(e) => set("phone", e.target.value)}
+                    onChange={(e) => {
+                      let val = e.target.value;
+                      // Ensure it always starts with "+91"
+                      if (!val.startsWith("+91")) {
+                        if (val.startsWith("+9")) {
+                          val = "+91";
+                        } else if (val.startsWith("+")) {
+                          val = "+91";
+                        } else if (val.startsWith("91")) {
+                          val = "+91" + val.slice(2);
+                        } else {
+                          val = "+91" + val.replace(/\D/g, "");
+                        }
+                      }
+                      
+                      // Strip non-digits from anything typed after "+91"
+                      const suffix = val.slice(3).replace(/\D/g, "");
+                      // Restrict length to exactly 10 digits
+                      const truncated = suffix.slice(0, 10);
+                      
+                      set("phone", "+91" + truncated);
+                    }}
                   />
                 </div>
                 <div className="vr-fg">

@@ -48,7 +48,9 @@ export default function VendorLoginPage() {
       toast.success(`Welcome back, ${vendor.name}!`);
       navigate("/vendor/dashboard");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Login failed");
+      // Show the specific error message returned by the backend
+      const msg = err.response?.data?.message || "Login failed. Please try again.";
+      toast.error(msg, { duration: 5000 });
     } finally {
       setLoading(false);
     }
@@ -139,6 +141,10 @@ export default function VendorLoginPage() {
               >
                 {loading ? "Signing in..." : "Sign In"}
               </button>
+
+              <p className="vl-forgot-link">
+                <Link to="/vendor/forgot-password">Forgot your password?</Link>
+              </p>
             </form>
 
             <p className="vl-register-link">
