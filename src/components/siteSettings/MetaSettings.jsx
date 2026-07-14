@@ -1,7 +1,7 @@
-import { useState, useRef } from "react";
-import { LayoutTemplate, ImageIcon, FileCode2, Plus, Trash2, Download } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { LayoutTemplate, ImageIcon, FileCode2, Plus, Trash2, Download, Save } from "lucide-react";
 import Toggle from "../ui/Toggle";
-import { updateMeta, toggleSection } from "../../services/api";
+import { updateMeta, toggleSection, updateSitemap } from "../../services/api";
 import toast from "react-hot-toast";
 
 /* ─── Sitemap helpers ───────────────────────────────────────────── */
@@ -49,26 +49,36 @@ function downloadXml(xml) {
   URL.revokeObjectURL(url);
 }
 
-/* ─── Sitemap Generator Component ─────────────────────────────── */
-function SitemapGenerator() {
-  const [entries, setEntries] = useState(loadEntries);
+function SitemapGenerator({ initialEntries = [], onSaveSuccess }) {
+  const [entries, setEntries] = useState([]);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (initialEntries && initialEntries.length > 0) {
+      setEntries(initialEntries.map((e) => ({ id: e._id || e.id, ...e })));
+    } else {
+      const local = loadEntries();
+      if (local && local.length > 0) {
+        setEntries(local);
+      } else {
+        setEntries([]);
+      }
+    }
+  }, [initialEntries]);
 
   const update = (id, field, value) => {
     const next = entries.map((e) => (e.id === id ? { ...e, [field]: value } : e));
     setEntries(next);
-    saveEntries(next);
   };
 
   const add = () => {
     const next = [...entries, defaultEntry()];
     setEntries(next);
-    saveEntries(next);
   };
 
   const remove = (id) => {
     const next = entries.filter((e) => e.id !== id);
     setEntries(next);
-    saveEntries(next);
   };
 
   const handleDownload = () => {
@@ -77,8 +87,38 @@ function SitemapGenerator() {
       toast.error("Add at least one URL before downloading.");
       return;
     }
-    downloadXml(buildXml(entries));
+    downloadXml(buildXml(valid));
     toast.success(`sitemap.xml downloaded with ${valid.length} URL${valid.length !== 1 ? "s" : ""}`);
+  };
+
+  const handleSave = async () => {
+    const valid = entries.filter((e) => e.loc.trim());
+    if (valid.length === 0) {
+      toast.error("Add at least one URL before saving.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = valid.map(({ id, _id, ...rest }) => ({
+        ...rest,
+        _id: _id || (id.length === 36 ? undefined : id),
+      }));
+
+      const res = await updateSitemap(payload);
+      const updatedSitemap = res.data.sitemap || [];
+      
+      setEntries(updatedSitemap.map((e) => ({ id: e._id, ...e })));
+      localStorage.removeItem(STORAGE_KEY);
+      
+      if (onSaveSuccess) {
+        onSaveSuccess(updatedSitemap);
+      }
+      toast.success("Sitemap saved and published successfully");
+    } catch (err) {
+      toast.error("Failed to save and publish sitemap");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -103,8 +143,16 @@ function SitemapGenerator() {
           color: "var(--text-secondary)",
           lineHeight: 1.6,
         }}>
-          Add the URLs you want Google to index. Click <strong>Download sitemap.xml</strong> to get
-          the file, then upload it to{" "}
+          Add the URLs you want Google to index. Once saved, your sitemap is published live at{" "}
+          <a
+            href="https://makeauditeasy.com/sitemap.xml"
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: "var(--teal)", fontWeight: 600, textDecoration: "underline" }}
+          >
+            https://makeauditeasy.com/sitemap.xml
+          </a>
+          . You can submit this link directly to{" "}
           <a
             href="https://search.google.com/search-console"
             target="_blank"
@@ -162,7 +210,7 @@ function SitemapGenerator() {
                         className="fi"
                         value={entry.loc}
                         onChange={(e) => update(entry.id, "loc", e.target.value)}
-                        placeholder="https://example.com/page"
+                        placeholder="https://makeauditeasy.com/page"
                         style={{ fontSize: 12 }}
                       />
                     </td>
@@ -284,6 +332,29 @@ function SitemapGenerator() {
               alignItems: "center",
               gap: 6,
               padding: "7px 16px",
+              background: "none",
+              border: "1px solid var(--teal)",
+              borderRadius: 6,
+              color: "var(--teal)",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--teal-bg)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+          >
+            <Download size={14} /> Download sitemap.xml
+          </button>
+
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "7px 16px",
               background: "var(--teal)",
               border: "none",
               borderRadius: 6,
@@ -292,11 +363,12 @@ function SitemapGenerator() {
               fontWeight: 600,
               cursor: "pointer",
               transition: "background 0.15s",
+              opacity: saving ? 0.7 : 1,
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--teal-dim)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "var(--teal)")}
+            onMouseEnter={(e) => !saving && (e.currentTarget.style.background = "var(--teal-dim)")}
+            onMouseLeave={(e) => !saving && (e.currentTarget.style.background = "var(--teal)")}
           >
-            <Download size={14} /> Download sitemap.xml
+            <Save size={14} /> {saving ? "Saving..." : "Save & Publish sitemap.xml"}
           </button>
 
           {entries.length > 0 && (
@@ -341,7 +413,7 @@ function SitemapGenerator() {
   );
 }
 
-export default function MetaSettings({ data, onChange }) {
+export default function MetaSettings({ data, sitemap, onChange, onSitemapChange }) {
   const [form, setForm] = useState({
     title: data?.title || "",
     description: data?.description || "",
@@ -565,7 +637,7 @@ export default function MetaSettings({ data, onChange }) {
         </div>
       </div>
     </div>
-    <SitemapGenerator />
+    <SitemapGenerator initialEntries={sitemap} onSaveSuccess={onSitemapChange} />
   </>
   );
 }

@@ -29,10 +29,16 @@ export default function MetaSettingsPage() {
     );
 
   const onChange = (meta) => setSettings((prev) => ({ ...prev, meta }));
+  const onSitemapChange = (sitemap) => setSettings((prev) => ({ ...prev, sitemap }));
 
   return (
     <div>
-      <MetaSettings data={settings.meta || {}} onChange={onChange} />
+      <MetaSettings
+        data={settings.meta || {}}
+        sitemap={settings.sitemap || []}
+        onChange={onChange}
+        onSitemapChange={onSitemapChange}
+      />
     </div>
   );
 }

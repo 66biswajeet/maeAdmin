@@ -54,7 +54,12 @@ export default function SiteSettingsPage() {
         onPromosChange={update("heroScenePromos")}
       />
 
-      <MetaSettings data={settings.meta || {}} onChange={update("meta")} />
+      <MetaSettings
+        data={settings.meta || {}}
+        sitemap={settings.sitemap || []}
+        onChange={update("meta")}
+        onSitemapChange={update("sitemap")}
+      />
 
       <PromoBannerSection
         data={settings.promoBanners || []}
